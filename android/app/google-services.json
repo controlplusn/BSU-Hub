@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "377826233148",
+    "project_id": "bsu-hub-c621f",
+    "storage_bucket": "bsu-hub-c621f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:377826233148:android:811eb5bb9f3f2f1122ec39",
+        "android_client_info": {
+          "package_name": "com.example.google_sign_up"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "377826233148-spb7110q1gubcde7t72mgdqqvnam5pv9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCvt8EC5eFJMc_zeZ1zrFR4ZNhnzSKA6I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "377826233148-spb7110q1gubcde7t72mgdqqvnam5pv9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
