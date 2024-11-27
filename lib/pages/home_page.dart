@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_in_button/sign_in_button.dart';
+import 'package:animate_do/animate_do.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,11 +31,91 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Google SignIn"),
-      ),
-      body: _user != null ? _userInfo() : _googleSignInButton(),
+
+      body:
+      //for user info
+      _user != null ? _userInfo() :
+      //for front page
+      Scaffold(
+        body: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.red.shade900,
+                Colors.black,
+              ],
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              SizedBox(height: 80),
+              Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    FadeInUp(
+                      duration: Duration(milliseconds: 1000),
+                      child: Text(
+                        "BSU HUB",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 40,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                  ],
+                ),
+              ),
+              SizedBox(height: 250),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(30),
+                    child: Column(
+                      children: <Widget>[
+                        SizedBox(height: 30),
+                        FadeInUp(
+                          duration: Duration(milliseconds: 1400),
+                          child: Text(
+                            "Sign Up",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 30,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 100),
+                        FadeInUp(
+                          duration: Duration(milliseconds: 1400),
+                          child: _googleSignInButton(), // Directly using the button here
+                        ),
+                        SizedBox(height: 50),
+                        _user != null ? _userInfo() : SizedBox.shrink(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      )
+
     );
   }
 
@@ -42,7 +123,15 @@ class _HomePageState extends State<HomePage> {
     return Center(
       child: SizedBox(
         height: 50,
-        child: SignInButton(Buttons.google, text: "Sign in to Google", onPressed: _handleGoogleSignIn),
+        child: SignInButton(
+          Buttons.google,
+          text: "Sign in to Google",
+          onPressed: _handleGoogleSignIn,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10), // Rounded edges
+          ),
+          padding: EdgeInsets.all(10), // Internal button padding
+        ),
       ),
     );
   }
@@ -52,7 +141,6 @@ class _HomePageState extends State<HomePage> {
     if (_user == null) {
       return const Center(child: Text('User is not signed in.'));
     }
-
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Column(
