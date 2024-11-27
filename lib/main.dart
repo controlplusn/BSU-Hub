@@ -121,7 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 color: Colors.white,
                                 border: Border.all(
                                   color: Colors.black, // Border color for the top side
-                                  width: 2.0,
+                                  width: 1.0,
                               ),
 
                                   borderRadius: BorderRadius.circular(10), // Rounded corners
