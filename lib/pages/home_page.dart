@@ -1,5 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_up/models/events.dart';
+import 'package:google_sign_up/services/database_services.dart';
+import 'package:intl/intl.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 import 'package:animate_do/animate_do.dart';
 
@@ -11,6 +14,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final DatabaseService _databaseService = DatabaseService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   User? _user;
 
@@ -138,32 +142,87 @@ class _HomePageState extends State<HomePage> {
 
   Widget _userInfo() {
     // Ensure _user is not null before accessing its properties
+    //print(_user);
+
     if (_user == null) {
-      return const Center(child: Text('User is not signed in.'));
+      return const SizedBox(child: Text('User is not signed in.'));
     }
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          if (_user!.photoURL != null)
-            Container(
-              height: 100,
-              width: 100,
-              decoration: BoxDecoration(
-                image: DecorationImage(image: NetworkImage(_user!.photoURL!)),
+    return SingleChildScrollView(
+      child: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            if (_user!.photoURL != null)
+              Container(
+                height: 100,
+                width: 100,
+                decoration: BoxDecoration(
+                  image: DecorationImage(image: NetworkImage(_user!.photoURL!)),
+                ),
               ),
+            Text(_user!.email!),
+            Text(_user!.displayName ?? "No display name"),
+            MaterialButton(
+              color: Colors.red,
+              child: const Text("Sign Out"),
+              onPressed: _signOutAndShowAlert,
             ),
-          Text(_user!.email!),
-          Text(_user!.displayName ?? "No display name"),
-          MaterialButton(
-            color: Colors.red,
-            child: const Text("Sign Out"),
-            onPressed: _signOutAndShowAlert,
-          ),
-        ],
+            SafeArea(
+                child:Column(
+                  children: [
+                    _messageListView(),
+                  ],
+                )
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _messageListView(){
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.8,
+      width: MediaQuery.sizeOf(context).width,
+      child: StreamBuilder(
+          stream: _databaseService.getEvents(),
+          builder:(context, snapshot){
+            List events = snapshot.data?.docs ?? [];
+            if(events.isEmpty){
+              return Center(
+                child: Text("No Events"),
+              );
+            }
+
+            return ListView.builder(
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                Event event = events[index].data();
+                String eventId = events[index].id;
+                //print(eventId);
+              return Padding(padding: const EdgeInsets.symmetric(
+                vertical: 10,
+                horizontal: 10
+              ),
+                  child: ListTile(
+                    tileColor: Theme.of(context).colorScheme.primaryContainer,
+                    title: Text("What: ${event.title}"),
+                    subtitle: Text("When: ${DateFormat("dd-MM-yyyy h:mm a").format(event.eventDate)}"),
+                    // Display event.description and event.tag arrays
+                    trailing: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Where: ${event.place}"),
+                        Text("Descriptions: ${event.description?.join(', ') ?? 'No descriptions'}"),
+                      ],
+                ),
+              )
+              );
+            },
+            );
+          },
       ),
     );
   }

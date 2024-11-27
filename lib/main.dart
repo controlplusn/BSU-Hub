@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_up/pages/home_page.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,6 +8,9 @@ void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true //this will enable to cache the data on the device which will enable data gathering from db
   );
   runApp(const MyApp());
 }
