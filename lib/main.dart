@@ -40,6 +40,12 @@ class _MyHomePageState extends State<MyHomePage> {
     photoURL: "https://example.com/photo.jpg", // Replace with a valid URL if necessary
   );
 
+  // Variable to track the notification icon state (active or inactive)
+  bool _isNotificationActive = false;
+
+  // Variable to control the notification drawer visibility
+  bool _isNotificationDrawerOpen = false;
+
   void _incrementCounter() {
     setState(() {
       _counter++;
@@ -50,6 +56,15 @@ class _MyHomePageState extends State<MyHomePage> {
     // Add sign-out logic here
     print("User signed out");
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Signed out")));
+  }
+
+  void _toggleNotification() {
+    setState(() {
+      _isNotificationActive = !_isNotificationActive;
+      // Toggle the visibility of the notification drawer when the icon is tapped
+      _isNotificationDrawerOpen = !_isNotificationDrawerOpen;
+    });
+    print("Notification icon tapped. Active state: $_isNotificationActive");
   }
 
   @override
@@ -70,6 +85,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  _isNotificationActive ? Icons.notifications_active : Icons.notifications,
+                  color: Colors.white,
+                ),
+                onPressed: _toggleNotification, // Toggle the notification state on tap
+              ),
+            ],
           ),
           SliverToBoxAdapter(
             child: Column(
@@ -122,9 +146,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 border: Border.all(
                                   color: Colors.black, // Border color for the top side
                                   width: 1.0,
-                              ),
-
-                                  borderRadius: BorderRadius.circular(10), // Rounded corners
+                                ),
+                                borderRadius: BorderRadius.circular(10), // Rounded corners
                               ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -214,7 +237,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                             child: const Center(
                               child: Text(
-                                '𝗕𝗮𝘁𝗦𝘁𝗮𝘁𝗲𝗨 𝘁𝗲𝗮𝗺 𝗿𝗲𝗱𝗲𝗳𝗶𝗻𝗲𝘀 𝘁𝗵𝗲 𝗡𝗮𝘁𝗶𝗼𝗻𝗮𝗹 𝗜𝗻𝗻𝗼𝘃𝗮𝘁𝗶𝗼𝗻 𝗖𝗼𝘂𝗻𝗰𝗶𝗹’𝘀 𝘃𝗶𝘀𝘂𝗮𝗹 𝗯𝗿𝗮𝗻𝗱 𝗶𝗱𝗲𝗻𝘁𝗶𝘁𝘆 𝘄𝗶𝘁𝗵 𝗮 𝗽𝗿𝗼𝘂𝗱𝗹𝘆 𝗙𝗶𝗹𝗶𝗽𝗶𝗻𝗼 𝘃𝗶𝘀𝗶𝗼𝗻',
+                                '𝗕𝗮𝘁𝗦𝘁𝗮𝘁𝗲𝗨 𝘁𝗲𝗮𝗺 𝗿𝗲𝗱𝗲𝗳𝗶𝗻𝗲𝘀 𝘁𝗵𝗲 𝗡𝗮𝘁𝗶𝗼𝗻𝗮𝗹 𝗜𝗻𝗻𝗼𝘃𝗮𝘁𝗶𝗼𝗻 𝗖𝗼𝘂𝗻𝗰𝗶𝗹’𝘀 𝘃𝗶𝘀𝘂𝗮𝗹 𝗯𝗿𝗮𝗻𝗱 𝗶𝗱𝗲𝗻𝗧𝗶𝘁𝘆 𝘄𝗶𝘁𝗵 𝗮 𝗽𝗿𝗼𝗨𝗱𝗟𝗬 𝗳𝗶𝗹𝗜𝗽𝗶𝗻𝗢 𝗩𝗶𝗦𝗜𝗢𝗡',
                                 style: TextStyle(color: Colors.black, fontSize: 14),
                               ),
                             ),
@@ -229,12 +252,11 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      // Nav bar
+      // Combined drawer for both navigation and notifications
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // User info section inside the sidebar (Drawer)
             DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.red,
@@ -265,7 +287,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.pop(context); // Close the drawer
               },
             ),
-            const Divider(), // Add a divider for separation
+            const Divider(),
             ListTile(
               title: const Text('Sign Out'),
               onTap: _signOutAndShowAlert, // Sign out logic here
@@ -293,14 +315,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
+// Mock user class for demonstration
 class User {
   final String email;
   final String displayName;
-  final String? photoURL;
+  final String photoURL;
 
-  User({
-    required this.email,
-    required this.displayName,
-    this.photoURL,
-  });
+  User({required this.email, required this.displayName, required this.photoURL});
 }
