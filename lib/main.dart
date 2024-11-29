@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -81,6 +82,50 @@ class _MyEvent extends State<MyEvent> {
   // Variable to track if search bar is visible
   bool _isSearchVisible = false;
 
+  // Timer for countdown
+  late Timer _timer;
+  Map<String, String> countdownMap = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdown();
+  }
+
+  void _startCountdown() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final currentTime = DateTime.now();
+      final updatedCountdownMap = <String, String>{};  // Explicitly define the type
+
+      for (var event in _events) {
+        final eventDate = DateTime.parse(event.eventDate); // Event date as DateTime
+        final difference = eventDate.difference(currentTime);
+
+        if (difference.isNegative) {
+          updatedCountdownMap[event.title] = 'Event Started';
+        } else {
+          final days = difference.inDays;
+          final hours = (difference.inHours % 60);
+          final minutes = (difference.inMinutes % 60);
+
+          updatedCountdownMap[event.title] =
+          '$days days ${hours.toString().padLeft(2, '0')} hr ${minutes.toString().padLeft(2, '0')} mins';
+        }
+      }
+
+      setState(() {
+        countdownMap = updatedCountdownMap;  // Update the map with the new countdown
+      });
+    });
+  }
+
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
   void _incrementCounter() {
     setState(() {
       _counter++;
@@ -133,6 +178,7 @@ class _MyEvent extends State<MyEvent> {
             onPressed: _toggleNotification, // Toggle the notification state on tap
           ),
         ],
+        iconTheme: IconThemeData(color: Colors.white), // Set the color of the hamburger icon
       ),
       drawer: Drawer(
         child: ListView(
@@ -245,50 +291,45 @@ class _MyEvent extends State<MyEvent> {
                               bottom: 10,
                               child: Container(
                                 padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                color: Colors.black54,
+                                color: Colors.black.withOpacity(0.6),
                                 child: Text(
-                                  event.eventDate, // Display the event date
+                                  event.eventDate, // Display event date
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 14,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                             ),
-                            // Event title, place, and description below the image
+                            // Event title and description
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    event.title,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18, // Increase font size
-                                      color: Colors.black, // Ensure dark text color
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    event.place,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16, // Slightly smaller font size
-                                      color: Colors.black, // Ensure dark text color
-                                    ),
-                                  ),
-                                ],
+                              child: Text(
+                                event.title, // Display event title
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ),
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
-                                event.description,
+                                event.description, // Display event description
                                 style: TextStyle(
                                   fontSize: 14, // Slightly smaller font size
                                   color: Colors.black54, // Lighter text color for description
+                                ),
+                              ),
+                            ),
+                            // Display countdown timer
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                countdownMap[event.title] ?? 'Loading...',
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold
                                 ),
                               ),
                             ),
@@ -300,9 +341,22 @@ class _MyEvent extends State<MyEvent> {
                           bottom: 10,
                           child: FloatingActionButton.extended(
                             onPressed: () {
-                              // Action on button press
+                              // Navigate to EventDescriptionPage
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EventDescriptionPage(event: event),
+                                ),
+                              );
                             },
-                            label: Text('Interested'),
+                            label: const Text(
+                              'More Details',
+                              style: TextStyle(color: Colors.white), // Set text color here
+                            ),
+                            icon: const Icon(
+                              Icons.info,
+                              color: Colors.white, // Set icon color here
+                            ),
                             backgroundColor: Colors.red,
                           ),
                         ),
@@ -320,23 +374,33 @@ class _MyEvent extends State<MyEvent> {
 
   Widget _userInfo() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center, // Center content vertically
-      crossAxisAlignment: CrossAxisAlignment.center, // Center content horizontally
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         CircleAvatar(
-          backgroundImage: NetworkImage(_user.photoURL), // Ensure the URL is valid
           radius: 40,
+          backgroundImage: NetworkImage(_user.photoURL),
         ),
-        const SizedBox(height: 20),
-        Text(_user.displayName),
-        const SizedBox(height: 5),
-        Text(_user.email),
+        SizedBox(height: 10),
+        Text(
+          _user.displayName,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        Text(
+          _user.email,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.white70,
+          ),
+        ),
       ],
     );
   }
 }
 
-// Event class to represent each event
 class Event {
   final String title;
   final String description;
@@ -353,11 +417,87 @@ class Event {
   });
 }
 
-// Mock user class for demonstration
+class EventDescriptionPage extends StatelessWidget {
+  final Event event;
+
+  const EventDescriptionPage({super.key, required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 250.0, // Adjust the height as needed
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Image.asset(
+                event.imageURL,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildListDelegate(
+              [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        event.title,
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        event.eventDate,
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        event.description,
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'Location: ${event.place}',
+                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      // FloatingActionButton to Buy Ticket
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          // Logic to handle ticket purchase (you can navigate to another page or show a dialog)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Redirecting to Buy Tickets for ${event.title}')),
+          );
+        },
+        label: Text('Buy Ticket', style: TextStyle(color: Colors.white)),
+        icon: Icon(Icons.confirmation_num, color: Colors.white),
+        backgroundColor: Colors.red,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat, // Position it at the bottom right
+    );
+  }
+}
+
+
 class User {
   final String email;
   final String displayName;
   final String photoURL;
 
-  User({required this.email, required this.displayName, required this.photoURL});
+  User({
+    required this.email,
+    required this.displayName,
+    required this.photoURL,
+  });
 }
