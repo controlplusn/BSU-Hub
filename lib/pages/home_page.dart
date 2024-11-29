@@ -5,6 +5,7 @@ import 'package:google_sign_up/services/database_services.dart';
 import 'package:intl/intl.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 import 'package:animate_do/animate_do.dart';
+import 'Announcements_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,6 +18,9 @@ class _HomePageState extends State<HomePage> {
   final DatabaseService _databaseService = DatabaseService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   User? _user;
+
+  // admin email
+  final String adminEmail = "22-06230@g.batstate-u.edu.ph";
 
   @override
   void initState() {
@@ -147,6 +151,8 @@ class _HomePageState extends State<HomePage> {
     if (_user == null) {
       return const SizedBox(child: Text('User is not signed in.'));
     }
+    bool isAdmin = _user!.email == adminEmail;
+
     return SingleChildScrollView(
       child: Center(
         child: Column(
@@ -169,14 +175,85 @@ class _HomePageState extends State<HomePage> {
               child: const Text("Sign Out"),
               onPressed: _signOutAndShowAlert,
             ),
-            SafeArea(
-                child:Column(
+            // Show admin-specific features
+            if (isAdmin)
+              SafeArea(
+                child: Column(
                   children: [
+                    Text("Admin Features"),
+                    _addAnnouncementButton(),
                     _messageListView(),
                   ],
-                )
-            )
+                ),
+              )
+            else
+              SafeArea(
+                child: Column(
+                  children: [
+                    Text("User Features"),
+                    _viewAnnouncementsButton(),
+                    _messageListView(),
+                  ],
+                ),
+              ),
+            _announcementsCard(),
           ],
+        ),
+      ),
+    );
+  }
+
+  // view announcements
+  Widget _viewAnnouncementsButton() {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AnnouncementsPage()),
+        );
+      },
+      child: Text("View Announcements"),
+    );
+  }
+
+  // Add announcements
+  Widget _addAnnouncementButton() {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AnnouncementsPage()),
+        );
+      },
+      child: Text("Add Announcement"),
+    );
+  }
+
+  // Announcements card button
+  Widget _announcementsCard() {
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      elevation: 5,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AnnouncementsPage()),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: Text(
+              "Announcements",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ),
         ),
       ),
     );
