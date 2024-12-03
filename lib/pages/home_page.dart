@@ -1,11 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_up/models/events.dart';
+import 'package:google_sign_up/pages/dashboard_page.dart';
 import 'package:google_sign_up/services/database_services.dart';
 import 'package:intl/intl.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 import 'package:animate_do/animate_do.dart';
 import 'Announcements_page.dart';
+import './admin_dashboard_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   // admin email
   final String adminEmail = "22-06230@g.batstate-u.edu.ph";
 
+  // check if the user is admin or not
   @override
   void initState() {
     super.initState();
@@ -31,11 +34,30 @@ class _HomePageState extends State<HomePage> {
       });
 
       // After the user is signed in, check the email domain
-      if (_user != null && !_user!.email!.contains('@g.batstate-u.edu.ph')) {
-        _signOutAndShowAlert();
+      if (_user != null) {
+        if (_user!.email!.contains('@g.batstate-u.edu.ph')) {
+          if (_user!.email == adminEmail) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdminDashboardPage(),
+              ),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MyHomePage(title: 'User Dashboard'),
+              ),
+            );
+          }
+        } else {
+          _signOutAndShowAlert();
+        }
       }
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +66,7 @@ class _HomePageState extends State<HomePage> {
 
       body:
       //for user info
-      _user != null ? _userInfo() :
+      _user != null ? MyHomePage(title: 'Dashboard') :
       //for front page
       Scaffold(
         body: Container(
@@ -139,7 +161,7 @@ class _HomePageState extends State<HomePage> {
             borderRadius: BorderRadius.circular(10), // Rounded edges
           ),
           padding: EdgeInsets.all(10), // Internal button padding
-        ),
+              ),
       ),
     );
   }
