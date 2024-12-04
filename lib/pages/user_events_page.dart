@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_up/pages/Announcements_page.dart';
+import 'package:google_sign_up/pages/feedback_page.dart';
 import 'package:google_sign_up/pages/home_page.dart';
 import 'package:google_sign_up/pages/user_dashboard_page.dart';
 
@@ -221,7 +222,12 @@ class _UserEventsPage extends State<UserEventsPage> {
             ListTile(
               title: const Text('Feedback'),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FeedbackPage(),
+                  ),
+                );
               },
             ),
             ListTile(

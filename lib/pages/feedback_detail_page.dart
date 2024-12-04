@@ -64,6 +64,7 @@ class _FeedbackDetailsPageState extends State<FeedbackDetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
             StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
               stream: getFeedbackDetails(),
               builder: (context, snapshot) {
@@ -77,35 +78,53 @@ class _FeedbackDetailsPageState extends State<FeedbackDetailsPage> {
 
                 var feedback = snapshot.data!.data()!;
                 DateTime postTime = (feedback['created_at'] as Timestamp).toDate();
-                String formattedTime = '${postTime.month}/${postTime.day}/${postTime.year} ${postTime.hour}:${postTime.minute}';
+                String formattedTime =
+                    '${postTime.month}/${postTime.day}/${postTime.year} ${postTime.hour}:${postTime.minute}';
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Posted Date and User
                     Text(
                       'Posted on: $formattedTime',
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
-                    SizedBox(height: 16),
-                    Text(
-                      feedback['title'],
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      children: (feedback['tags'] as List)
-                          .map<Widget>((tag) => Chip(label: Text(tag)))
-                          .toList(),
-                    ),
-                    SizedBox(height: 16),
+                    SizedBox(height: 8),
                     Text(
                       'Posted by: ${feedback['user'] == 'anonymous' ? 'Anonymous' : feedback['user']}',
-                      style: TextStyle(fontSize: 18),
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                     SizedBox(height: 16),
-                    Text(feedback['description']),
+
+                    // Title and Tags
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            feedback['title'],
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Wrap(
+                          spacing: 8,
+                          children: (feedback['tags'] as List)
+                              .map<Widget>((tag) => Chip(label: Text(tag)))
+                              .toList(),
+                        ),
+                      ],
+                    ),
                     SizedBox(height: 16),
+
+                    // Description
+                    Text(
+                      feedback['description'],
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    SizedBox(height: 16),
+
+                    // Comments Label
                     Text(
                       'Comments:',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -114,6 +133,7 @@ class _FeedbackDetailsPageState extends State<FeedbackDetailsPage> {
                 );
               },
             ),
+
             SizedBox(height: 8),
             Expanded(
               child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
