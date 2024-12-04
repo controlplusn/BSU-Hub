@@ -1,55 +1,64 @@
 import 'package:flutter/material.dart';
-import 'package:google_sign_up/pages/eventAdmin_page.dart';
+import 'package:google_sign_up/pages/Announcements_page.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_up/pages/home_page.dart';
-import './Announcements_page.dart';
-import './dashboard_page.dart';
-import './feedback_page.dart';
-import './events_page.dart';
+import 'package:google_sign_up/pages/user_events_page.dart';
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class UserDashboardPage extends StatefulWidget {
+  const UserDashboardPage({super.key, required this.title, required this.user});
 
   final String title;
+  final auth.User user; // Authenticated user passed from HomePage
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<UserDashboardPage> createState() => _UserDashboardPage();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  // Mock user data (replace with real authentication logic)
-  // final _user = User(
-  //   email: "user@example.com",
-  //   displayName: "John Doe",
-  //   photoURL: "https://example.com/photo.jpg", // Replace with a valid URL if necessary
-  // );
-
-  // Variable to track the notification icon state (active or inactive)
+class _UserDashboardPage extends State<UserDashboardPage> {
   bool _isNotificationActive = false;
-
-  // Variable to control the notification drawer visibility
   bool _isNotificationDrawerOpen = false;
+  bool _isAdmin = false; // Variable to store admin status
+  final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  // check user role
+  @override
+  void initState() {
+    super.initState();
+    _checkAdminStatus();
   }
 
-  void _signOutAndShowAlert() {
-    // Add sign-out logic here
-    print("User signed out");
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Signed out")));
+  Future<void> _checkAdminStatus() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        final doc = await _firestore.collection('users').doc(user.uid).get();
+        if (doc.exists && doc.data()?['role'] == 'admin') {
+          setState(() {
+            _isAdmin = true; // User is an admin
+          });
+        }
+      }
+    } catch (e) {
+      print("Error checking admin status: $e");
+    }
   }
 
   void _toggleNotification() {
     setState(() {
       _isNotificationActive = !_isNotificationActive;
-      // Toggle the visibility of the notification drawer when the icon is tapped
       _isNotificationDrawerOpen = !_isNotificationDrawerOpen;
     });
-    print("Notification icon tapped. Active state: $_isNotificationActive");
+  }
+
+  void _signOutAndShowAlert() async {
+    await auth.FirebaseAuth.instance.signOut();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+          (route) => false,
+    );
   }
 
   @override
@@ -73,7 +82,9 @@ class _MyHomePageState extends State<MyHomePage> {
             actions: [
               IconButton(
                 icon: Icon(
-                  _isNotificationActive ? Icons.notifications_active : Icons.notifications,
+                  _isNotificationActive
+                      ? Icons.notifications_active
+                      : Icons.notifications,
                   color: Colors.white,
                 ),
                 onPressed: _toggleNotification, // Toggle the notification state on tap
@@ -246,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
               decoration: BoxDecoration(
                 color: Colors.red,
               ),
-              child: Text("Hello world"),
+              child: _userInfo(widget.user),
             ),
             ListTile(
               title: const Text('Home'),
@@ -254,7 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => MyHomePage(title: "Dashboard")
+                    builder: (context) => UserDashboardPage(title: "Dashboard", user: widget.user),
                   ),
                 );
               },
@@ -265,7 +276,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => AnnouncementsPage()
+                    builder: (context) => AnnouncementsPage(),
                   ),
                 );
               },
@@ -273,12 +284,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ListTile(
               title: const Text('Feedback'),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => FeedbackPage()
-                  ),
-                );
+                Navigator.pop(context); // Close the drawer
               },
             ),
             ListTile(
@@ -287,7 +293,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => AdminEvent(title: "Event Title")
+                    builder: (context) => UserEventsPage(title: "Events", user: widget.user),
                   ),
                 );
               },
@@ -303,28 +309,28 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  // Widget _userInfo() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       CircleAvatar(
-  //         backgroundImage: NetworkImage(_user.photoURL ?? ''),
-  //         radius: 40,
-  //       ),
-  //       const SizedBox(height: 10),
-  //       Text(_user.displayName ?? ''),
-  //       const SizedBox(height: 5),
-  //       Text(_user.email ?? ''),
-  //     ],
-  //   );
-  // }
+  Widget _userInfo(auth.User user) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          backgroundImage: NetworkImage(user.photoURL ?? ''),
+          radius: 40,
+        ),
+        const SizedBox(height: 10),
+        Text(user.displayName ?? 'No Display Name'),
+        const SizedBox(height: 5),
+        Text(user.email ?? 'No Email'),
+      ],
+    );
+  }
 }
 
 // Mock user class for demonstration
-// class User {
-//   final String email;
-//   final String displayName;
-//   final String photoURL;
-//
-//   User({required this.email, required this.displayName, required this.photoURL});
-// }
+class User {
+  final String email;
+  final String displayName;
+  final String photoURL;
+
+  User({required this.email, required this.displayName, required this.photoURL});
+}

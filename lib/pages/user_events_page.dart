@@ -1,24 +1,48 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_up/pages/Announcements_page.dart';
+import 'package:google_sign_up/pages/home_page.dart';
+import 'package:google_sign_up/pages/user_dashboard_page.dart';
 
-class MyEvent extends StatefulWidget {
-  const MyEvent({super.key, required this.title});
+class UserEventsPage extends StatefulWidget {
+  const UserEventsPage({super.key, required this.title, required this.user});
 
   final String title;
+  final auth.User user;
 
   @override
-  State<MyEvent> createState() => _MyEvent();
+  State<UserEventsPage> createState() => _UserEventsPage();
 }
 
-class _MyEvent extends State<MyEvent> {
+class _UserEventsPage extends State<UserEventsPage> {
+  bool _isAdmin = false; // Variable to store admin status
+  final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   int _counter = 0;
 
-  // Mock user data (replace with real authentication logic)
-  final _user = User(
-    email: "user@example.com",
-    displayName: "John Doe",
-    photoURL: "https://example.com/photo.jpg", // Replace with a valid URL if necessary
-  );
+  @override
+  void initState() {
+    super.initState();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        final doc = await _firestore.collection('users').doc(user.uid).get();
+        if (doc.exists && doc.data()?['role'] == 'admin') {
+          setState(() {
+            _isAdmin = true; // User is an admin
+          });
+        }
+      }
+    } catch (e) {
+      print("Error checking admin status: $e");
+    }
+  }
 
   // List of event data
   final List<Event> _events = [
@@ -65,11 +89,11 @@ class _MyEvent extends State<MyEvent> {
   late Timer _timer;
   Map<String, String> countdownMap = {};
 
-  @override
-  void initState() {
-    super.initState();
-    _startCountdown();
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _startCountdown();
+  // }
 
   void _startCountdown() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -111,10 +135,13 @@ class _MyEvent extends State<MyEvent> {
     });
   }
 
-  void _signOutAndShowAlert() {
-    // Add sign-out logic here
-    print("User signed out");
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Signed out")));
+  void _signOutAndShowAlert() async {
+    await auth.FirebaseAuth.instance.signOut();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+          (route) => false,
+    );
   }
 
   void _toggleNotification() {
@@ -167,20 +194,28 @@ class _MyEvent extends State<MyEvent> {
               decoration: BoxDecoration(
                 color: Colors.red,
               ),
-              child: Center( // Center the user info
-                child: _userInfo(),
-              ),
+              child: _userInfo(widget.user),
             ),
             ListTile(
               title: const Text('Home'),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserDashboardPage(title: "Dashboard", user: widget.user),
+                  ),
+                );
               },
             ),
             ListTile(
               title: const Text('Announcement'),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AnnouncementsPage(),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -192,7 +227,12 @@ class _MyEvent extends State<MyEvent> {
             ListTile(
               title: const Text('Events'),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserEventsPage(title: "Events", user: widget.user,),
+                  ),
+                );
               },
             ),
             const Divider(),
@@ -203,6 +243,7 @@ class _MyEvent extends State<MyEvent> {
           ],
         ),
       ),
+
       body: Column(
         children: [
           // Show search bar if it's visible
@@ -350,34 +391,22 @@ class _MyEvent extends State<MyEvent> {
       ),
     );
   }
+}
 
-  Widget _userInfo() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        CircleAvatar(
-          radius: 40,
-          backgroundImage: NetworkImage(_user.photoURL),
-        ),
-        SizedBox(height: 10),
-        Text(
-          _user.displayName,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          _user.email,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.white70,
-          ),
-        ),
-      ],
-    );
-  }
+Widget _userInfo(auth.User user) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      CircleAvatar(
+        backgroundImage: NetworkImage(user.photoURL ?? ''),
+        radius: 40,
+      ),
+      const SizedBox(height: 10),
+      Text(user.displayName ?? 'No Display Name'),
+      const SizedBox(height: 5),
+      Text(user.email ?? 'No Email'),
+    ],
+  );
 }
 
 class Event {

@@ -2,9 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; // For formatting date
 import './home_page.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 
-class AnnouncementsPage extends StatelessWidget {
-  const AnnouncementsPage({super.key});
+class AnnouncementsPage extends StatefulWidget {
+  const AnnouncementsPage({Key? key}) : super(key: key);
+
+  @override
+  _AnnouncementsPageState createState() => _AnnouncementsPageState();
+}
+
+class _AnnouncementsPageState extends State<AnnouncementsPage> {
+  bool _isAdmin = false; // Variable to store admin status
+  final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        final doc = await _firestore.collection('users').doc(user.uid).get();
+        if (doc.exists && doc.data()?['role'] == 'admin') {
+          setState(() {
+            _isAdmin = true; // User is an admin
+          });
+        }
+      }
+    } catch (e) {
+      print("Error checking admin status: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,27 +75,28 @@ class AnnouncementsPage extends StatelessWidget {
             ],
           ),
           actions: [
-            // Add the "Add Announcement" button in the AppBar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AddAnnouncementPage()),
-                  );
-                },
-                icon: Icon(Icons.add), // Icon for the button
-                label: Text("Add Announcement"), // Text for the button
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue, // Button background color
-                  foregroundColor: Colors.white, // Text and icon color
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8), // Rounded corners
+            // Conditionally render the "Add Announcement" button for admins
+            if (_isAdmin)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AddAnnouncementPage()),
+                    );
+                  },
+                  icon: Icon(Icons.add),
+                  label: Text("Add Announcement"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
         body: TabBarView(
@@ -215,23 +248,23 @@ class AnnouncementsList extends StatelessWidget {
 }
 
 
-  // Get tag-specific color
-  Color getTagColor(String? tag) {
-    switch (tag) {
-      case 'Exams':
-        return Colors.blue;
-      case 'General':
-        return Colors.red;
-      case 'Sports':
-        return Colors.indigo;
-      case 'Classes':
-        return Colors.orange;
-      case 'Events':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
+// Get tag-specific color
+Color getTagColor(String? tag) {
+  switch (tag) {
+    case 'Exams':
+      return Colors.blue;
+    case 'General':
+      return Colors.red;
+    case 'Sports':
+      return Colors.indigo;
+    case 'Classes':
+      return Colors.orange;
+    case 'Events':
+      return Colors.green;
+    default:
+      return Colors.grey;
   }
+}
 
 // Placeholder for Add Announcement Page
 class AddAnnouncementPage extends StatefulWidget {
