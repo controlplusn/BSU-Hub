@@ -8,6 +8,7 @@ import 'package:google_sign_up/pages/home_page.dart';
 import 'package:google_sign_up/pages/user_dashboard_page.dart';
 import 'package:google_sign_up/services/database_services.dart';
 import 'package:google_sign_up/models/events.dart';
+import 'package:intl/intl.dart';
 
 class UserEventsPage extends StatefulWidget {
   const UserEventsPage({super.key, required this.title, required this.user});
@@ -237,6 +238,12 @@ class _UserEventsPage extends State<UserEventsPage> {
                   return Center(child: Text('No events found!')); // Handle empty state
                 }
 
+                events.sort((a, b) {
+                  var dateA = a.data().eventDate; // Replace with the actual key for the event date
+                  var dateB = b.data().eventDate; // Replace with the actual key for the event date
+                  return dateA.compareTo(dateB); // Ascending order
+                });
+
                 return ListView.builder(
                   itemCount: events.length,
                   itemBuilder: (context, index) {
@@ -277,7 +284,7 @@ class _UserEventsPage extends State<UserEventsPage> {
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Text(
-                                  'Time',//(event.eventDate.toDate().toString(), // Display event date
+                                  DateFormat('MMM dd, yyyy').format(event.eventDate), // Display event date
                                   style: TextStyle(
                                     color: Colors.black54,
                                     fontSize: 16,
@@ -299,7 +306,9 @@ class _UserEventsPage extends State<UserEventsPage> {
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Text(
-                                  event.description, // Display event description
+                                  event.description.length > 25
+                                      ? '${event.description.substring(0, 25)}...'
+                                      : event.description, // Truncate and add ellipses if needed
                                   style: TextStyle(
                                     fontSize: 14, // Slightly smaller font size
                                     color: Colors.black54, // Lighter text color for description

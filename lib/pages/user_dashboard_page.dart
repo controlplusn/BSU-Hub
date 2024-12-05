@@ -163,7 +163,6 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                                     (index) {
                                   var event = events[index].data();
                                   String eventId = events[index].id;
-                                  print('Event Date: ${event.eventDate.toString()}');
                                   return Container(
                                     margin: const EdgeInsets.only(right: 10), // Add margin between containers
                                     width: 300, // Set the width of each container
@@ -191,7 +190,9 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                                           padding: const EdgeInsets.all(8.0),
                                           child: Center(
                                             child: Text(
-                                              event.title, // Display event title
+                                              event.title.length > 10
+                                                  ? '${event.title.substring(0, 10)}...'
+                                                  : event.title, // Truncate and add ellipses if needed
                                               style: TextStyle(fontSize: 30),
                                             ),
                                           ),
