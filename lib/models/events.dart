@@ -17,7 +17,7 @@ class Event {
   // Convert Firestore Document to Event Object
   factory Event.fromJson(Map<String, dynamic> json, {String id = ''}) {
     return Event(
-      eventDate: _parseTimestamp(json['date_time']), // Adjusted to 'date_time'
+      eventDate: _parseTimestamp(json['eventDate']), // Adjusted to 'date_time'
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       place: json['place'] ?? '',

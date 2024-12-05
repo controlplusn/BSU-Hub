@@ -4,6 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_up/pages/home_page.dart';
 import 'package:google_sign_up/pages/user_events_page.dart';
+import 'package:google_sign_up/services/database_services.dart';
+import 'package:intl/intl.dart';
+import 'package:google_sign_up/models/events.dart';
 
 class UserDashboardPage extends StatefulWidget {
   const UserDashboardPage({super.key, required this.title, required this.user});
@@ -16,6 +19,7 @@ class UserDashboardPage extends StatefulWidget {
 }
 
 class _UserDashboardPage extends State<UserDashboardPage> {
+  final DatabaseService _databaseService = DatabaseService();
   bool _isNotificationActive = false;
   bool _isNotificationDrawerOpen = false;
   bool _isAdmin = false; // Variable to store admin status
@@ -109,8 +113,8 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: const Text(
-                      'Fri, November 22, 2024',
+                    child: Text(
+                      DateFormat('EEE, MMMM dd, yyyy').format(DateTime.now()), // Format the current date
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                     ),
                   ),
@@ -131,52 +135,80 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                       // Horizontal scrollable container
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal, // Make the content scrollable horizontally
-                        child: Row(
-                          children: List.generate(
-                            3, // Number of items in the horizontal scrollable container
-                                (index) => Container(
-                              margin: const EdgeInsets.only(right: 10),
-                              width: 300, // Set the width of each container
-                              height: 200, // Set the height of each container
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(
-                                  color: Colors.black, // Border color for the top side
-                                  width: 1.0,
-                                ),
-                                borderRadius: BorderRadius.circular(10), // Rounded corners
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start, // Align all content to the start
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      'February 14, 2025',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Center(
-                                      child: Text(
-                                        'AREA 143',
-                                        style: TextStyle(fontSize: 30),
+                        child: StreamBuilder(
+                          stream: _databaseService.getEvents(), // Stream fetching events
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return Center(child: CircularProgressIndicator());
+                            }
+
+                            // Check for errors
+                            if (snapshot.hasError) {
+                              return Center(child: Text('An error occurred!'));
+                            }
+
+                            // Get the list of events from snapshot
+                            List events = snapshot.data?.docs ?? [];
+                            if (events.isEmpty) {
+                              return Center(child: Text('No events found!')); // Handle empty state
+                            }
+
+                            // Limit the number of items to 3
+                            events = events.take(3).toList();
+
+                            return Row(
+                              children: List.generate(
+                                events.length, // Generate only up to 3 events
+                                    (index) {
+                                  var event = events[index].data();
+                                  String eventId = events[index].id;
+                                  print('Event Date: ${event.eventDate.toString()}');
+                                  return Container(
+                                    margin: const EdgeInsets.only(right: 10), // Add margin between containers
+                                    width: 300, // Set the width of each container
+                                    height: 200, // Set the height of each container
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(
+                                        color: Colors.black, // Border color for the top side
+                                        width: 1.0,
                                       ),
+                                      borderRadius: BorderRadius.circular(10), // Rounded corners
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      'Upcoming Event.',
-                                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.start, // Align all content to the start
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            DateFormat('MMM dd, yyyy').format(event.eventDate), // Display event date
+                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Center(
+                                            child: Text(
+                                              event.title, // Display event title
+                                              style: TextStyle(fontSize: 30),
+                                            ),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              _getEventStatus(event.eventDate), // Call method to get the event status
+                                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                                            ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                  );
+                                },
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
                       ),
 
@@ -308,6 +340,22 @@ class _UserDashboardPage extends State<UserDashboardPage> {
         ),
       ),
     );
+  }
+
+  String _getEventStatus(DateTime eventDate) {
+    DateTime now = DateTime.now();
+
+    // Normalize times to ignore hours, minutes, and seconds for the comparison
+    DateTime eventStartOfDay = DateTime(eventDate.year, eventDate.month, eventDate.day);
+    DateTime nowStartOfDay = DateTime(now.year, now.month, now.day);
+
+    if (eventStartOfDay.isAfter(nowStartOfDay)) {
+      return 'Upcoming Event'; // Event is in the future
+    } else if (eventStartOfDay.isBefore(nowStartOfDay)) {
+      return 'Happened Event'; // Event is in the past
+    } else {
+      return 'Ongoing Event'; // Event is happening today
+    }
   }
 
   Widget _userInfo(auth.User user) {
