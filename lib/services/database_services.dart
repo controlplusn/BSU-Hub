@@ -22,4 +22,8 @@ class DatabaseService{
   void addEvent(Event event) async {
     _eventsRef.add(event);
   }
+
+  void updateEvent(String eventId, Event event){
+    _eventsRef.doc(eventId).update(event.toJson());
+  }
 }

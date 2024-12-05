@@ -1,60 +1,62 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// model of Events data
-
 class Event {
   final DateTime eventDate;
   final String title;
-  final List<String> description; //this is stored in array since it can have multiple values
+  final String description;
   final String place;
-  final String imageURL; // I'll be using url since it is referencing to a firebase storage
+
 
   Event({
     required this.eventDate,
     required this.title,
     required this.description,
     required this.place,
-    required this.imageURL,
   });
 
   // Convert Firestore Document to Event Object
   factory Event.fromJson(Map<String, dynamic> json, {String id = ''}) {
     return Event(
-      eventDate: (json['eventDate'] as Timestamp).toDate(),
+      eventDate: _parseTimestamp(json['date_time']), // Adjusted to 'date_time'
       title: json['title'] ?? '',
-      description: List<String>.from(json['description'] ?? []),
+      description: json['description'] ?? '',
       place: json['place'] ?? '',
-      imageURL: json['imageURL'] ?? '',
     );
   }
 
-  // copyWith function
-  // this allows you to create a new Event object by copying an existing one while overriding specific fields.
+  static DateTime _parseTimestamp(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    } else if (value is String) {
+      // If the timestamp is stored as a string, parse it
+      return DateTime.parse(value);
+    } else {
+      return DateTime.now(); // Fallback if the value is invalid
+    }
+  }
+
+  // CopyWith function
   Event copyWith({
     DateTime? eventDate,
     String? title,
-    List<String>? description,
+    String? description,
     String? place,
-    String? imageURL,
   }) {
     return Event(
       eventDate: eventDate ?? this.eventDate,
       title: title ?? this.title,
       description: description ?? this.description,
       place: place ?? this.place,
-      imageURL: imageURL ?? this.imageURL,
     );
   }
 
   // Convert Event Object to Firestore Document
   Map<String, dynamic> toJson() {
     return {
-      'eventDate': eventDate,
+      'date_time': Timestamp.fromDate(eventDate), // Store as 'date_time'
       'title': title,
       'description': description,
       'place': place,
-      'imageURL': imageURL,
     };
   }
-
- }
+}

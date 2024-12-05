@@ -6,6 +6,8 @@ import 'package:google_sign_up/pages/Announcements_page.dart';
 import 'package:google_sign_up/pages/feedback_page.dart';
 import 'package:google_sign_up/pages/home_page.dart';
 import 'package:google_sign_up/pages/user_dashboard_page.dart';
+import 'package:google_sign_up/services/database_services.dart';
+import 'package:google_sign_up/models/events.dart';
 
 class UserEventsPage extends StatefulWidget {
   const UserEventsPage({super.key, required this.title, required this.user});
@@ -19,6 +21,7 @@ class UserEventsPage extends StatefulWidget {
 
 class _UserEventsPage extends State<UserEventsPage> {
   bool _isAdmin = false; // Variable to store admin status
+  final DatabaseService _databaseService = DatabaseService();
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   int _counter = 0;
@@ -45,37 +48,6 @@ class _UserEventsPage extends State<UserEventsPage> {
     }
   }
 
-  // List of event data
-  final List<Event> _events = [
-    Event(
-      title: 'SINAGTALA 2024',
-      description: 'A grand celebration of BatstateU TNEU - Alangilan Campus.',
-      eventDate: 'December 1, 2024',
-      imageURL: 'assets/main-1-entrance.jpg', // Make sure the image path is correct
-      place: 'BatstateU TNEU - Alangilan Campus',
-    ),
-    Event(
-      title: 'Tech Conference 2024',
-      description: 'An event for all tech enthusiasts.',
-      eventDate: 'January 15, 2025',
-      imageURL: 'assets/main-1-entrance.jpg', // Replace with your actual event image URL
-      place: 'BatstateU Main Campus',
-    ),
-    Event(
-      title: 'Music Fest 2024',
-      description: 'A music festival to kickstart the new year.',
-      eventDate: 'February 14, 2025',
-      imageURL: 'assets/main-1-entrance.jpg', // Replace with your actual event image URL
-      place: 'BatstateU TNEU - Alangilan Campus',
-    ),
-    Event(
-      title: 'Sports Festival 2024',
-      description: 'A celebration of sports and wellness.',
-      eventDate: 'March 20, 2025',
-      imageURL: 'assets/main-1-entrance.jpg', // Replace with your actual event image URL
-      place: 'BatstateU Main Campus',
-    ),
-  ];
 
   // Variable to track the notification icon state (active or inactive)
   bool _isNotificationActive = false;
@@ -90,38 +62,7 @@ class _UserEventsPage extends State<UserEventsPage> {
   late Timer _timer;
   Map<String, String> countdownMap = {};
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _startCountdown();
-  // }
 
-  void _startCountdown() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      final currentTime = DateTime.now();
-      final updatedCountdownMap = <String, String>{};  // Explicitly define the type
-
-      for (var event in _events) {
-        final eventDate = DateTime.parse(event.eventDate); // Event date as DateTime
-        final difference = eventDate.difference(currentTime);
-
-        if (difference.isNegative) {
-          updatedCountdownMap[event.title] = 'Event Started';
-        } else {
-          final days = difference.inDays;
-          final hours = (difference.inHours % 60);
-          final minutes = (difference.inMinutes % 60);
-
-          updatedCountdownMap[event.title] =
-          '$days days ${hours.toString().padLeft(2, '0')} hr ${minutes.toString().padLeft(2, '0')} mins';
-        }
-      }
-
-      setState(() {
-        countdownMap = updatedCountdownMap;  // Update the map with the new countdown
-      });
-    });
-  }
 
 
   @override
@@ -278,119 +219,127 @@ class _UserEventsPage extends State<UserEventsPage> {
             ),
           // Scrollable Container
           Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.vertical, // Make the content scrollable vertically
-              child: Column(
-                children: _events.map((event) {
-                  return Container(
-                    margin: const EdgeInsets.only(top: 30, left: 30, right: 30), // Adding margin
-                    width: 350, // Set the width of each container
-                    height: 350, // Set the height of each container
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(
-                        color: Colors.black, // Border color for the top side
-                        width: 1.0,
+            child: StreamBuilder(
+              stream: _databaseService.getEvents(), // Stream fetching events
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                // Check for errors
+                if (snapshot.hasError) {
+                  return Center(child: Text('An error occurred!'));
+                }
+
+                // Get the list of events from snapshot
+                List events = snapshot.data?.docs ?? [];
+                if (events.isEmpty) {
+                  return Center(child: Text('No events found!')); // Handle empty state
+                }
+
+                return ListView.builder(
+                  itemCount: events.length,
+                  itemBuilder: (context, index) {
+                    var event = events[index].data();
+                    String eventId = events[index].id;
+
+                    // Build the container here using the event data
+                    return Container(
+                      margin: const EdgeInsets.only(top: 30, left: 30, right: 30), // Adding margin
+                      width: 350, // Set the width of each container
+                      height: 350, // Set the height of each container
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(
+                          color: Colors.black, // Border color for the top side
+                          width: 1.0,
+                        ),
+                        borderRadius: BorderRadius.circular(20), // Rounded corners
                       ),
-                      borderRadius: BorderRadius.circular(20), // Rounded corners
-                    ),
-                    child: Stack( // Use Stack to position elements within the container
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start, // Align all content to the start
-                          children: [
-                            // Image and event date on top of it
-                            ClipRRect(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(20), // Apply border radius only to top-left corner
-                                topRight: Radius.circular(20),
+                      child: Stack(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Image and event date on top of it
+                              ClipRRect(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20), // Apply border radius only to top-left corner
+                                  topRight: Radius.circular(20),
+                                ),
+                                child: Image.asset(
+                                  'assets/8.jpg',
+                                  width: double.infinity, // Takes up full width
+                                  height: 116, // Height for the image
+                                  fit: BoxFit.cover, // Ensure the image covers the space without distortion
+                                ),
                               ),
-                              child: Image.asset(
-                                event.imageURL, // Use event image URL
-                                width: double.infinity, // Takes up full width
-                                height: 116, // Height for the image
-                                fit: BoxFit.cover, // Ensure the image covers the space without distortion
-                              ),
-                            ),
-                            Positioned(
-                              left: 10,
-                              bottom: 10,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                color: Colors.black.withOpacity(0.6),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
                                 child: Text(
-                                  event.eventDate, // Display event date
+                                  'Time',//(event.eventDate.toDate().toString(), // Display event date
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: Colors.black54,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
-                            ),
-                            // Event title and description
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                event.title, // Display event title
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                event.description, // Display event description
-                                style: TextStyle(
-                                  fontSize: 14, // Slightly smaller font size
-                                  color: Colors.black54, // Lighter text color for description
+                              // Event title and description
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  event.title, // Display event title
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                            // Display countdown timer
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                countdownMap[event.title] ?? 'Loading...',
-                                style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  event.description, // Display event description
+                                  style: TextStyle(
+                                    fontSize: 14, // Slightly smaller font size
+                                    color: Colors.black54, // Lighter text color for description
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        // Floating Action Button on the right side
-                        Positioned(
-                          right: 10,
-                          bottom: 10,
-                          child: FloatingActionButton.extended(
-                            onPressed: () {
-                              // Navigate to EventDescriptionPage
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => EventDescriptionPage(event: event),
-                                ),
-                              );
-                            },
-                            label: const Text(
-                              'More Details',
-                              style: TextStyle(color: Colors.white), // Set text color here
-                            ),
-                            icon: const Icon(
-                              Icons.info,
-                              color: Colors.white, // Set icon color here
-                            ),
-                            backgroundColor: Colors.red,
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
+                          // Floating Action Button on the right side
+                          Positioned(
+                            right: 10,
+                            bottom: 10,
+                            child: FloatingActionButton.extended(
+                              onPressed: () {
+                                // Navigate to EventDescriptionPage
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        EventDescriptionPage(eventId: eventId, event: event),
+                                  ),
+                                );
+                              },
+                              label: const Text(
+                                'More Details',
+                                style: TextStyle(color: Colors.white), // Set text color here
+                              ),
+                              icon: const Icon(
+                                Icons.info,
+                                color: Colors.white, // Set icon color here
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ),
         ],
@@ -415,26 +364,12 @@ Widget _userInfo(auth.User user) {
   );
 }
 
-class Event {
-  final String title;
-  final String description;
-  final String eventDate;
-  final String imageURL;
-  final String place;
-
-  Event({
-    required this.title,
-    required this.description,
-    required this.eventDate,
-    required this.imageURL,
-    required this.place,
-  });
-}
 
 class EventDescriptionPage extends StatelessWidget {
+  final String eventId;
   final Event event;
 
-  const EventDescriptionPage({super.key, required this.event});
+  const EventDescriptionPage({super.key, required this.event, required this.eventId});
 
   @override
   Widget build(BuildContext context) {
@@ -446,7 +381,7 @@ class EventDescriptionPage extends StatelessWidget {
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Image.asset(
-                event.imageURL,
+                'assets/8.jpg',
                 fit: BoxFit.cover,
               ),
             ),
@@ -465,7 +400,7 @@ class EventDescriptionPage extends StatelessWidget {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        event.eventDate,
+                        event.eventDate.toString(),
                         style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
                       SizedBox(height: 16),
