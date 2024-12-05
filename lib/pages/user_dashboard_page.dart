@@ -197,10 +197,10 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                                         ),
                                         Padding(
                                           padding: const EdgeInsets.all(8.0),
-                                            child: Text(
-                                              _getEventStatus(event.eventDate), // Call method to get the event status
-                                              style: TextStyle(fontSize: 12, color: Colors.grey),
-                                            ),
+                                          child: Text(
+                                            _getEventStatus(event.eventDate), // Call method to get the event status
+                                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -236,42 +236,75 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                       ),
 
                       // Row to align two containers at the bottom
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Aligns the containers to the left and right
-                        children: [
-                          // Left container
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 0),
-                            width: 170, // Set the width of the left container
-                            height: 200, // Height of the container
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20), // Apply border radius here
-                              color: Colors.white, // Container color
-                            ),
-                            child: const Center(
-                              child: Text(
-                                '𝗦𝘂𝗽𝗽𝗼𝗿𝘁 𝗕𝗮𝘁𝗦𝘁𝗮𝘁𝗲𝗨 𝗶𝗻 𝘁𝗵𝗲 𝗠𝗜𝗗𝗔𝗦 𝗧𝗼𝗽 𝗦𝘁𝗿𝘂𝗰𝘁𝘂𝗿𝗲 𝗔𝘄𝗮𝗿𝗱𝘀',
-                                style: TextStyle(color: Colors.black, fontSize: 14),
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('announcements')
+                            .orderBy('date_time', descending: true)
+                            .limit(2)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return Center(child: CircularProgressIndicator());
+                          }
+
+                          if (snapshot.hasError) {
+                            return Center(child: Text('Error: ${snapshot.error}'));
+                          }
+
+                          final announcements = snapshot.data!.docs;
+
+                          if (announcements.isEmpty) {
+                            return Center(child: Text('No announcements found.'));
+                          }
+
+                          final announcement1 = announcements.isNotEmpty ? announcements[0] : null;
+                          final announcement2 = announcements.length > 1 ? announcements[1] : null;
+
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Left container
+                              Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 0),
+                                width: 170, // Set the width of the left container
+                                height: 200, // Height of the container
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20), // Apply border radius here
+                                  color: Colors.white, // Container color
+                                ),
+                                child: announcement1 != null
+                                    ? Center(
+                                  child: Text(
+                                    announcement1['description'], // Display only description
+                                    style: TextStyle(color: Colors.black, fontSize: 14),
+                                    textAlign: TextAlign.center, // Optional, to center the text
+                                  ),
+                                )
+                                    : const Center(child: Text('No description available.')),
                               ),
-                            ),
-                          ),
-                          // Right container
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 0),
-                            width: 170, // Set the width of the right container
-                            height: 200, // Height of the container
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20), // Apply border radius here
-                              color: Colors.white, // Container color
-                            ),
-                            child: const Center(
-                              child: Text(
-                                '𝗕𝗮𝘁𝗦𝘁𝗮𝘁𝗲𝗨 𝘁𝗲𝗮𝗺 𝗿𝗲𝗱𝗲𝗳𝗶𝗻𝗲𝘀 𝘁𝗵𝗲 𝗡𝗮𝘁𝗶𝗼𝗻𝗮𝗹 𝗜𝗻𝗻𝗼𝘃𝗮𝘁𝗶𝗼𝗻 𝗖𝗼𝘂𝗻𝗰𝗶𝗹’𝘀 𝘃𝗶𝘀𝘂𝗮𝗹 𝗯𝗿𝗮𝗻𝗱 𝗶𝗱𝗲𝗻𝗧𝗶𝘁𝘆 𝘄𝗶𝘁𝗵 𝗮 𝗽𝗿𝗼𝗨𝗱𝗟𝗬 𝗳𝗶𝗹𝗜𝗽𝗶𝗻𝗢 𝗩𝗶𝗦𝗜𝗢𝗡',
-                                style: TextStyle(color: Colors.black, fontSize: 14),
+
+                              // Right container
+                              Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 0),
+                                width: 170, // Set the width of the right container
+                                height: 200, // Height of the container
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20), // Apply border radius here
+                                  color: Colors.white, // Container color
+                                ),
+                                child: announcement2 != null
+                                    ? Center(
+                                  child: Text(
+                                    announcement2['description'], // Display only description
+                                    style: TextStyle(color: Colors.black, fontSize: 14),
+                                    textAlign: TextAlign.center, // Optional, to center the text
+                                  ),
+                                )
+                                    : const Center(child: Text('No description available.')),
                               ),
-                            ),
-                          ),
-                        ],
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -341,6 +374,7 @@ class _UserDashboardPage extends State<UserDashboardPage> {
       ),
     );
   }
+
 
   String _getEventStatus(DateTime eventDate) {
     DateTime now = DateTime.now();
