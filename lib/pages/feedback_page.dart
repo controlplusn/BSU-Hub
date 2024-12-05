@@ -33,9 +33,15 @@ class _FeedbackPageState extends State<FeedbackPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Feedback System'),
+        title: Text(
+          'Feedback System',
+          style: TextStyle(color: Colors.white), // Set the text color to white
+        ),
+        backgroundColor: Colors.red, // Set the background color to red
+        iconTheme: IconThemeData(color: Colors.white), // Set the icon color to white
       ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(  // Updated to handle list of feedbacks
+
+  body: StreamBuilder<List<Map<String, dynamic>>>(  // Updated to handle list of feedbacks
         stream: getFeedbacks(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -60,6 +66,14 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
               return Card(
                 margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                color: Colors.white, // Set the background color of the Card
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0), // Optional: Rounded corners
+                  side: BorderSide(
+                    color: Colors.black, // Set the border color
+                    width: 1.0, // Set the border width
+                  ),
+                ),
                 child: ListTile(
                   title: Text(feedback['title']),
                   subtitle: Column(
@@ -71,9 +85,18 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       Wrap(
                         spacing: 8,
                         children: feedback['tags']
-                            .map<Widget>((tag) => Chip(label: Text(tag)))
+                            .map<Widget>((tag) => Chip(
+                          label: Text(
+                            tag,
+                            style: TextStyle(
+                              color: Colors.white, // Set the text color of the chip
+                            ),
+                          ),
+                          backgroundColor: Colors.red, // Set the background color of the chip
+                        ))
                             .toList(),
                       ),
+
                     ],
                   ),
                   onTap: () {
@@ -82,12 +105,13 @@ class _FeedbackPageState extends State<FeedbackPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => FeedbackDetailsPage(feedbackId: feedbackId)  // Pass feedbackId here
+                        builder: (context) => FeedbackDetailsPage(feedbackId: feedbackId), // Pass feedbackId here
                       ),
                     );
                   },
                 ),
               );
+
             },
           );
         },
@@ -102,9 +126,14 @@ class _FeedbackPageState extends State<FeedbackPage> {
             ),
           );
         },
-        child: Icon(Icons.add),
+        child: Icon(
+          Icons.add,
+          color: Colors.white, // Set the icon color (foreground color)
+        ),
         tooltip: 'Add Feedback',
+        backgroundColor: Colors.red, // Set the background color of the FAB
       ),
+
     );
   }
 }

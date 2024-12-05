@@ -349,18 +349,32 @@ class _UserEventsPage extends State<UserEventsPage> {
 }
 
 Widget _userInfo(auth.User user) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      CircleAvatar(
-        backgroundImage: NetworkImage(user.photoURL ?? ''),
-        radius: 40,
-      ),
-      const SizedBox(height: 10),
-      Text(user.displayName ?? 'No Display Name'),
-      const SizedBox(height: 5),
-      Text(user.email ?? 'No Email'),
-    ],
+  return SingleChildScrollView( // Wrap the Column with SingleChildScrollView
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          backgroundImage: NetworkImage(user.photoURL ?? ''),
+          radius: 40,
+        ),
+        const SizedBox(height: 10),
+        Text(
+          user.displayName ?? 'No Display Name',
+          style: TextStyle(
+            fontSize: 18, // Change the font size here
+            fontWeight: FontWeight.bold, // Optional: make the text bold
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          user.email ?? 'No Email',
+          style: TextStyle(
+            fontSize: 10, // Change the font size here
+            color: Colors.white, // Optional: change the text color
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -422,18 +436,6 @@ class EventDescriptionPage extends StatelessWidget {
         ],
       ),
       // FloatingActionButton to Buy Ticket
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Logic to handle ticket purchase (you can navigate to another page or show a dialog)
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Redirecting to Buy Tickets for ${event.title}')),
-          );
-        },
-        label: Text('Buy Ticket', style: TextStyle(color: Colors.white)),
-        icon: Icon(Icons.confirmation_num, color: Colors.white),
-        backgroundColor: Colors.red,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat, // Position it at the bottom right
     );
   }
 }

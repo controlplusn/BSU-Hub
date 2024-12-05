@@ -44,15 +44,15 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       length: 5,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.red,
           elevation: 1,
           title: Text(
             'Announcements',
-            style: TextStyle(color: Colors.black),
+            style: TextStyle(color: Colors.white),
           ),
           centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.black),
+            icon: Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () {
               // Navigate to the home page (replace 'HomePage' with your actual home widget)
               Navigator.pushReplacement(
@@ -63,8 +63,8 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
           ),
           bottom: TabBar(
             isScrollable: true,
-            indicatorColor: Colors.blue,
-            labelColor: Colors.black,
+            indicatorColor: Colors.black,
+            labelColor: Colors.white,
             unselectedLabelColor: Colors.grey,
             tabs: [
               Tab(text: 'All Items'),

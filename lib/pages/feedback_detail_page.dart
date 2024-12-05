@@ -57,8 +57,14 @@ class _FeedbackDetailsPageState extends State<FeedbackDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Feedback Details'),
+        title: Text(
+        'Feedback Details',
+        style: TextStyle(color: Colors.white),
       ),
+    backgroundColor: Colors.red, // Set the background color to red
+    iconTheme: IconThemeData(color: Colors.white),
+      ),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -87,12 +93,12 @@ class _FeedbackDetailsPageState extends State<FeedbackDetailsPage> {
                     // Posted Date and User
                     Text(
                       'Posted on: $formattedTime',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     SizedBox(height: 8),
                     Text(
                       'Posted by: ${feedback['user'] == 'anonymous' ? 'Anonymous' : feedback['user']}',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     SizedBox(height: 16),
 
@@ -110,9 +116,18 @@ class _FeedbackDetailsPageState extends State<FeedbackDetailsPage> {
                         Wrap(
                           spacing: 8,
                           children: (feedback['tags'] as List)
-                              .map<Widget>((tag) => Chip(label: Text(tag)))
+                              .map<Widget>((tag) => Chip(
+                            label: Text(
+                              tag,
+                              style: TextStyle(
+                                color: Colors.white, // Set the text color
+                              ),
+                            ),
+                            backgroundColor: Colors.red, // Set the background color of the Chip
+                          ))
                               .toList(),
-                        ),
+                        )
+
                       ],
                     ),
                     SizedBox(height: 16),
@@ -127,7 +142,7 @@ class _FeedbackDetailsPageState extends State<FeedbackDetailsPage> {
                     // Comments Label
                     Text(
                       'Comments:',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
                   ],
                 );
@@ -157,6 +172,14 @@ class _FeedbackDetailsPageState extends State<FeedbackDetailsPage> {
 
                       return Card(
                         margin: EdgeInsets.symmetric(vertical: 4),
+                        color: Colors.white, // Set the background color of the Card
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0), // Optional: Add rounded corners
+                          side: BorderSide(
+                            color: Colors.black, // Set the border color
+                            width: 1.0, // Set the border width
+                          ),
+                        ),
                         child: ListTile(
                           title: Text(comment['comment']),
                           subtitle: Column(
@@ -168,6 +191,7 @@ class _FeedbackDetailsPageState extends State<FeedbackDetailsPage> {
                           ),
                         ),
                       );
+
                     },
                   );
                 },
@@ -185,8 +209,16 @@ class _FeedbackDetailsPageState extends State<FeedbackDetailsPage> {
               onPressed: () {
                 addComment(widget.feedbackId); // Add comment to this specific feedback
               },
-              child: Text('Add Comment'),
-            ),
+              child: Text(
+                'Add Comment',
+                style: TextStyle(color: Colors.white), // Set the text color
+              ),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white, backgroundColor: Colors.red, // Set the text color (foreground color)
+              ),
+            )
+
+
           ],
         ),
       ),

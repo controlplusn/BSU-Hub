@@ -36,8 +36,14 @@ class _AddFeedbackPageState extends State<AddFeedbackPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Feedback'),
+        title: Text(
+        'Feedback System',
+        style: TextStyle(color: Colors.white),
       ),
+        backgroundColor: Colors.red, // Set the background color to red
+        iconTheme: IconThemeData(color: Colors.white), // Set the icon color to white
+      ),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -70,8 +76,15 @@ class _AddFeedbackPageState extends State<AddFeedbackPage> {
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: addFeedback,
-              child: Text('Submit Feedback'),
-            ),
+              child: Text(
+                'Submit Feedback',
+                style: TextStyle(color: Colors.white), // Set the text color
+              ),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white, backgroundColor: Colors.red, // Set the text color (foreground color)
+              ),
+            )
+
           ],
         ),
       ),

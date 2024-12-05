@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_up/pages/home_page.dart';
 import 'package:google_sign_up/pages/user_events_page.dart';
+import 'package:google_sign_up/pages/feedback_page.dart';
 import 'package:google_sign_up/services/database_services.dart';
 import 'package:intl/intl.dart';
 import 'package:google_sign_up/models/events.dart';
@@ -223,7 +224,7 @@ class _UserDashboardPage extends State<UserDashboardPage> {
 
                       // Add the small container below the Divider
                       Container(
-                        margin: const EdgeInsets.symmetric(vertical: 0),
+                        margin: const EdgeInsets.symmetric(vertical: 10),
                         width: double.infinity,
                         height: 30, // Small container height
                         color: Colors.red, // Container color
@@ -232,6 +233,7 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                             'LATEST ANNOUNCEMENTS',
                             style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
+
                         ),
                       ),
 
@@ -266,12 +268,19 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                               // Left container
                               Container(
                                 margin: const EdgeInsets.symmetric(horizontal: 0),
-                                width: 170, // Set the width of the left container
+                                width: 165, // Set the width of the left container
                                 height: 200, // Height of the container
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20), // Apply border radius here
                                   color: Colors.white, // Container color
+                                  border: Border.all(
+                                    color: Colors.black, // Set the border color (you can change this to any color)
+                                    width: 1.0, // Set the border width
+                                  ),
+                                  borderRadius: BorderRadius.all(Radius.circular(10)
+                                  ),
                                 ),
+
+                                padding: const EdgeInsets.all(8.0), // Add padding here
                                 child: announcement1 != null
                                     ? Center(
                                   child: Text(
@@ -286,12 +295,19 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                               // Right container
                               Container(
                                 margin: const EdgeInsets.symmetric(horizontal: 0),
-                                width: 170, // Set the width of the right container
+                                width: 165, // Set the width of the right container
                                 height: 200, // Height of the container
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20), // Apply border radius here
                                   color: Colors.white, // Container color
+                                  border: Border.all(
+                                    color: Colors.black, // Set the border color (you can change this to any color)
+                                    width: 1.0, // Set the border width
+                                  ),
+                                  borderRadius: BorderRadius.all(Radius.circular(10)
+                                  ),
                                 ),
+                                padding: const EdgeInsets.all(8.0), // Add padding here
+
                                 child: announcement2 != null
                                     ? Center(
                                   child: Text(
@@ -350,7 +366,12 @@ class _UserDashboardPage extends State<UserDashboardPage> {
             ListTile(
               title: const Text('Feedback'),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => FeedbackPage(),
+                  )
+                ); // Close the drawer
               },
             ),
             ListTile(
