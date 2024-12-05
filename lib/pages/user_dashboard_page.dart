@@ -90,6 +90,7 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                 onPressed: _toggleNotification, // Toggle the notification state on tap
               ),
             ],
+            iconTheme: IconThemeData(color: Colors.white),
           ),
           SliverToBoxAdapter(
             child: Column(
@@ -209,7 +210,7 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                           // Left container
                           Container(
                             margin: const EdgeInsets.symmetric(horizontal: 0),
-                            width: 200, // Set the width of the left container
+                            width: 170, // Set the width of the left container
                             height: 200, // Height of the container
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20), // Apply border radius here
@@ -225,7 +226,7 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                           // Right container
                           Container(
                             margin: const EdgeInsets.symmetric(horizontal: 0),
-                            width: 200, // Set the width of the right container
+                            width: 170, // Set the width of the right container
                             height: 200, // Height of the container
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20), // Apply border radius here
@@ -310,21 +311,37 @@ class _UserDashboardPage extends State<UserDashboardPage> {
   }
 
   Widget _userInfo(auth.User user) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CircleAvatar(
-          backgroundImage: NetworkImage(user.photoURL ?? ''),
-          radius: 40,
-        ),
-        const SizedBox(height: 10),
-        Text(user.displayName ?? 'No Display Name'),
-        const SizedBox(height: 5),
-        Text(user.email ?? 'No Email'),
-      ],
+    return SingleChildScrollView( // Wrap the Column with SingleChildScrollView
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            backgroundImage: NetworkImage(user.photoURL ?? ''),
+            radius: 40,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            user.displayName ?? 'No Display Name',
+            style: TextStyle(
+              fontSize: 18, // Change the font size here
+              fontWeight: FontWeight.bold, // Optional: make the text bold
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            user.email ?? 'No Email',
+            style: TextStyle(
+              fontSize: 10, // Change the font size here
+              color: Colors.white, // Optional: change the text color
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
+
+
 
 // Mock user class for demonstration
 class User {
@@ -334,3 +351,4 @@ class User {
 
   User({required this.email, required this.displayName, required this.photoURL});
 }
+
