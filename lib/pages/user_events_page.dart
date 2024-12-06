@@ -423,7 +423,7 @@ class EventDescriptionPage extends StatelessWidget {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        event.eventDate.toString(),
+                        DateFormat('MMM dd, yyyy').format(event.eventDate),
                         style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
                       SizedBox(height: 16),
