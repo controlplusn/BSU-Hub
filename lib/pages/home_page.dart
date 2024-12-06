@@ -169,9 +169,9 @@ class _HomePageState extends State<HomePage> {
         builder: (context) => isAdmin
             ? const AdminDashboardPage()
             : UserDashboardPage(
-          title: "Dashboard",
-          user: _user!,
-        ),
+              title: "Dashboard",
+              user: _user!,
+            ),
       ),
     );
   }

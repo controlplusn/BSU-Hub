@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddFeedbackPage extends StatefulWidget {
   @override
@@ -9,26 +10,51 @@ class AddFeedbackPage extends StatefulWidget {
 class _AddFeedbackPageState extends State<AddFeedbackPage> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
-  final List<String> tags = ['General Usability', 'Navigation', 'Payments']; // Example tags
+  final List<String> tags = ['General Usability', 'Navigation', 'Payments'];
   String selectedTag = 'General Usability';
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Function to add feedback to Firestore
   Future<void> addFeedback() async {
+    if (titleController.text.isEmpty || descriptionController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please fill in all fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     try {
       await FirebaseFirestore.instance.collection('feedbacks').add({
         'title': titleController.text,
         'description': descriptionController.text,
         'tags': [selectedTag],
-        'user': 'Anonymous',  // Add logic to get real user info if needed
-        'created_at': Timestamp.now(),  // Add current timestamp
+        'user': _auth.currentUser?.email ?? 'Anonymous',
+        'created_at': Timestamp.now(),
+        'status': 'Pending', // Add default status
+        'resolved_at': null,
+        'resolved_by': null,
       });
 
-      // After adding feedback, clear the text fields and go back
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Feedback submitted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
       titleController.clear();
       descriptionController.clear();
       Navigator.pop(context);
     } catch (e) {
-      print("Error adding feedback: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error submitting feedback: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -37,13 +63,12 @@ class _AddFeedbackPageState extends State<AddFeedbackPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-        'Feedback System',
-        style: TextStyle(color: Colors.white),
+          'Add Feedback',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.red,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
-        backgroundColor: Colors.red, // Set the background color to red
-        iconTheme: IconThemeData(color: Colors.white), // Set the icon color to white
-      ),
-
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -51,16 +76,25 @@ class _AddFeedbackPageState extends State<AddFeedbackPage> {
           children: [
             TextField(
               controller: titleController,
-              decoration: InputDecoration(labelText: 'Title'),
+              decoration: InputDecoration(
+                labelText: 'Title',
+                border: OutlineInputBorder(),
+              ),
             ),
+            SizedBox(height: 16),
             TextField(
               controller: descriptionController,
-              decoration: InputDecoration(labelText: 'Description'),
+              decoration: InputDecoration(
+                labelText: 'Description',
+                border: OutlineInputBorder(),
+              ),
               maxLines: 5,
             ),
             SizedBox(height: 16),
+            Text('Category:', style: TextStyle(fontSize: 16)),
             DropdownButton<String>(
               value: selectedTag,
+              isExpanded: true,
               onChanged: (newTag) {
                 setState(() {
                   selectedTag = newTag!;
@@ -73,18 +107,21 @@ class _AddFeedbackPageState extends State<AddFeedbackPage> {
                 );
               }).toList(),
             ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: addFeedback,
-              child: Text(
-                'Submit Feedback',
-                style: TextStyle(color: Colors.white), // Set the text color
+            SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: addFeedback,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  padding: EdgeInsets.symmetric(vertical: 15),
+                ),
+                child: Text(
+                  'Submit Feedback',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white, backgroundColor: Colors.red, // Set the text color (foreground color)
-              ),
-            )
-
+            ),
           ],
         ),
       ),

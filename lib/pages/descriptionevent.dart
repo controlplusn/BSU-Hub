@@ -1,32 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../models/events.dart';
 
 class EventDescriptionPage extends StatelessWidget {
   final Event event;
 
-  const EventDescriptionPage({super.key, required this.event});
+  const EventDescriptionPage({Key? key, required this.event}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Event Details',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.red,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
       body: CustomScrollView(
         slivers: [
-          // SliverAppBar for the flexible app bar with an image
-          SliverAppBar(
-            expandedHeight: 250.0, // Height of the app bar when expanded
-            floating: false,
-            pinned: true, // Makes the app bar stay at the top when scrolling
-            flexibleSpace: FlexibleSpaceBar(
-              background: Image.asset(
-                event.imageURL, // Event image
-                fit: BoxFit.cover,
+          SliverToBoxAdapter(
+            child: Container(
+              height: 200,
+              color: Colors.red.withOpacity(0.1),
+              child: Center(
+                child: Icon(
+                  Icons.event,
+                  size: 80,
+                  color: Colors.red,
+                ),
               ),
             ),
-            title: Text(
-              event.title,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
           ),
-          // SliverList to contain the body content that scrolls
           SliverList(
             delegate: SliverChildListDelegate(
               [
@@ -35,20 +41,102 @@ class EventDescriptionPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 16),
                       Text(
-                        event.eventDate,
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                        event.title,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       SizedBox(height: 16),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.calendar_today, size: 16, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text(
+                              DateFormat('EEEE, MMMM d, yyyy').format(event.eventDate),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.access_time, size: 16, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text(
+                              DateFormat('h:mm a').format(event.eventDate),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      Text(
+                        'Description',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
                       Text(
                         event.description,
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(
+                          fontSize: 16,
+                          height: 1.5,
+                        ),
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: 24),
                       Text(
-                        'Location: ${event.place}',
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                        'Location',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.location_on, color: Colors.red),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                event.place,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -60,20 +148,4 @@ class EventDescriptionPage extends StatelessWidget {
       ),
     );
   }
-}
-
-class Event {
-  final String title;
-  final String description;
-  final String eventDate;
-  final String imageURL;
-  final String place;
-
-  Event({
-    required this.title,
-    required this.description,
-    required this.eventDate,
-    required this.imageURL,
-    required this.place,
-  });
 }

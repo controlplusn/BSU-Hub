@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import './feedback_detail_page.dart';
+import './feedback_details_page.dart';
 import './add_feedback_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FeedbackPage extends StatefulWidget {
   @override
@@ -9,21 +10,27 @@ class FeedbackPage extends StatefulWidget {
 }
 
 class _FeedbackPageState extends State<FeedbackPage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final String adminEmail = "22-06230@g.batstate-u.edu.ph";
+
+  bool get isAdmin => _auth.currentUser?.email == adminEmail;
+
   // Fetching data from Firestore
   Stream<List<Map<String, dynamic>>> getFeedbacks() {
     return FirebaseFirestore.instance
         .collection('feedbacks')
-        .orderBy('created_at', descending: true)  // Order by time, newest first
+        .orderBy('created_at', descending: true)
         .snapshots()
         .map((querySnapshot) {
       return querySnapshot.docs.map((doc) {
         return {
-          'id': doc.id,  // Add the document ID here
+          'id': doc.id,
           'title': doc['title'],
           'description': doc['description'],
           'tags': List<String>.from(doc['tags']),
           'user': doc['user'],
           'created_at': (doc['created_at'] as Timestamp).toDate(),
+          'status': doc['status'] ?? 'Pending',
         };
       }).toList();
     });
@@ -35,13 +42,12 @@ class _FeedbackPageState extends State<FeedbackPage> {
       appBar: AppBar(
         title: Text(
           'Feedback System',
-          style: TextStyle(color: Colors.white), // Set the text color to white
+          style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.red, // Set the background color to red
-        iconTheme: IconThemeData(color: Colors.white), // Set the icon color to white
+        backgroundColor: Colors.red,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
-
-  body: StreamBuilder<List<Map<String, dynamic>>>(  // Updated to handle list of feedbacks
+      body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: getFeedbacks(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -62,20 +68,38 @@ class _FeedbackPageState extends State<FeedbackPage> {
             itemCount: feedbacks.length,
             itemBuilder: (context, index) {
               final feedback = feedbacks[index];
-              final feedbackId = feedback['id'];  // Get the feedback ID
+              final feedbackId = feedback['id'];
+              final status = feedback['status'] ?? 'Pending';
 
               return Card(
                 margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                color: Colors.white, // Set the background color of the Card
+                color: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0), // Optional: Rounded corners
-                  side: BorderSide(
-                    color: Colors.black, // Set the border color
-                    width: 1.0, // Set the border width
-                  ),
+                  borderRadius: BorderRadius.circular(12.0),
+                  side: BorderSide(color: Colors.black, width: 1.0),
                 ),
                 child: ListTile(
-                  title: Text(feedback['title']),
+                  title: Row(
+                    children: [
+                      Expanded(child: Text(feedback['title'])),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: status == 'Resolved'
+                              ? Colors.green.withOpacity(0.2)
+                              : Colors.orange.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          status,
+                          style: TextStyle(
+                            color: status == 'Resolved' ? Colors.green : Colors.orange,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -84,56 +108,43 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       Text(feedback['created_at'].toString()),
                       Wrap(
                         spacing: 8,
-                        children: feedback['tags']
+                        children: (feedback['tags'] as List)
                             .map<Widget>((tag) => Chip(
-                          label: Text(
-                            tag,
-                            style: TextStyle(
-                              color: Colors.white, // Set the text color of the chip
-                            ),
-                          ),
-                          backgroundColor: Colors.red, // Set the background color of the chip
+                          label: Text(tag, style: TextStyle(color: Colors.white)),
+                          backgroundColor: Colors.red,
                         ))
                             .toList(),
                       ),
-
                     ],
                   ),
                   onTap: () {
-                    final feedbackId = feedback['id'];
-                    // Handle feedback click (navigate to feedback details page)
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => FeedbackDetailsPage(feedbackId: feedbackId), // Pass feedbackId here
+                        builder: (context) => FeedbackDetailsPage(
+                          feedbackId: feedbackId,
+                          isAdmin: isAdmin,
+                        ),
                       ),
                     );
                   },
                 ),
               );
-
             },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to the "Add Feedback" page
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => AddFeedbackPage(),
-            ),
+            MaterialPageRoute(builder: (context) => AddFeedbackPage()),
           );
         },
-        child: Icon(
-          Icons.add,
-          color: Colors.white, // Set the icon color (foreground color)
-        ),
+        child: Icon(Icons.add, color: Colors.white),
         tooltip: 'Add Feedback',
-        backgroundColor: Colors.red, // Set the background color of the FAB
+        backgroundColor: Colors.red,
       ),
-
     );
   }
 }

@@ -8,6 +8,8 @@ import 'package:google_sign_up/pages/feedback_page.dart';
 import 'package:google_sign_up/services/database_services.dart';
 import 'package:intl/intl.dart';
 import 'package:google_sign_up/models/events.dart';
+import '../services/announcement_services.dart';
+import '../models/announcements.dart';
 
 class UserDashboardPage extends StatefulWidget {
   const UserDashboardPage({super.key, required this.title, required this.user});
@@ -26,6 +28,7 @@ class _UserDashboardPage extends State<UserDashboardPage> {
   bool _isAdmin = false; // Variable to store admin status
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AnnouncementService _announcementService = AnnouncementService();
 
   // check user role
   @override
@@ -239,14 +242,10 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                       ),
 
                       // Row to align two containers at the bottom
-                      StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('announcements')
-                            .orderBy('date_time', descending: true)
-                            .limit(2)
-                            .snapshots(),
+                      StreamBuilder<List<Announcement>>(
+                        stream: _announcementService.getLatestAnnouncements(limit: 2),
                         builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
                             return Center(child: CircularProgressIndicator());
                           }
 
@@ -254,71 +253,102 @@ class _UserDashboardPage extends State<UserDashboardPage> {
                             return Center(child: Text('Error: ${snapshot.error}'));
                           }
 
-                          final announcements = snapshot.data!.docs;
+                          final announcements = snapshot.data ?? [];
 
                           if (announcements.isEmpty) {
                             return Center(child: Text('No announcements found.'));
                           }
 
-                          final announcement1 = announcements.isNotEmpty ? announcements[0] : null;
-                          final announcement2 = announcements.length > 1 ? announcements[1] : null;
-
                           return Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Left container
-                              Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 0),
-                                width: 165, // Set the width of the left container
-                                height: 200, // Height of the container
-                                decoration: BoxDecoration(
-                                  color: Colors.white, // Container color
-                                  border: Border.all(
-                                    color: Colors.black, // Set the border color (you can change this to any color)
-                                    width: 1.0, // Set the border width
+                              // Left container (First announcement)
+                              Expanded(
+                                child: Container(
+                                  margin: const EdgeInsets.only(right: 8),
+                                  height: 200,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(color: Colors.black, width: 1.0),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
-                                  borderRadius: BorderRadius.all(Radius.circular(10)
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        announcements[0].title,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        DateFormat('MMM dd, yyyy').format(announcements[0].dateTime),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Expanded(
+                                        child: Text(
+                                          announcements[0].description,
+                                          style: TextStyle(fontSize: 14),
+                                          overflow: TextOverflow.fade,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-
-                                padding: const EdgeInsets.all(8.0), // Add padding here
-                                child: announcement1 != null
-                                    ? Center(
-                                  child: Text(
-                                    announcement1['description'], // Display only description
-                                    style: TextStyle(color: Colors.black, fontSize: 14),
-                                    textAlign: TextAlign.center, // Optional, to center the text
-                                  ),
-                                )
-                                    : const Center(child: Text('No description available.')),
                               ),
-
-                              // Right container
-                              Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 0),
-                                width: 165, // Set the width of the right container
-                                height: 200, // Height of the container
-                                decoration: BoxDecoration(
-                                  color: Colors.white, // Container color
-                                  border: Border.all(
-                                    color: Colors.black, // Set the border color (you can change this to any color)
-                                    width: 1.0, // Set the border width
-                                  ),
-                                  borderRadius: BorderRadius.all(Radius.circular(10)
+                              // Right container (Second announcement if available)
+                              if (announcements.length > 1)
+                                Expanded(
+                                  child: Container(
+                                    margin: const EdgeInsets.only(left: 8),
+                                    height: 200,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(color: Colors.black, width: 1.0),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          announcements[1].title,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          DateFormat('MMM dd, yyyy').format(announcements[1].dateTime),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Expanded(
+                                          child: Text(
+                                            announcements[1].description,
+                                            style: TextStyle(fontSize: 14),
+                                            overflow: TextOverflow.fade,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                                padding: const EdgeInsets.all(8.0), // Add padding here
-
-                                child: announcement2 != null
-                                    ? Center(
-                                  child: Text(
-                                    announcement2['description'], // Display only description
-                                    style: TextStyle(color: Colors.black, fontSize: 14),
-                                    textAlign: TextAlign.center, // Optional, to center the text
-                                  ),
-                                )
-                                    : const Center(child: Text('No description available.')),
-                              ),
                             ],
                           );
                         },
@@ -368,10 +398,10 @@ class _UserDashboardPage extends State<UserDashboardPage> {
               title: const Text('Feedback'),
               onTap: () {
                 Navigator.push(
-                  context,
-                  MaterialPageRoute(
+                    context,
+                    MaterialPageRoute(
                       builder: (context) => FeedbackPage(),
-                  )
+                    )
                 ); // Close the drawer
               },
             ),

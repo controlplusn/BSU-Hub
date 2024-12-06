@@ -16,25 +16,21 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // admin email
+  final String adminEmail = "22-06230@g.batstate-u.edu.ph";
+
   @override
   void initState() {
     super.initState();
     _checkAdminStatus();
   }
 
-  Future<void> _checkAdminStatus() async {
-    try {
-      final user = _auth.currentUser;
-      if (user != null) {
-        final doc = await _firestore.collection('users').doc(user.uid).get();
-        if (doc.exists && doc.data()?['role'] == 'admin') {
-          setState(() {
-            _isAdmin = true; // User is an admin
-          });
-        }
-      }
-    } catch (e) {
-      print("Error checking admin status: $e");
+  void _checkAdminStatus() {
+    final user = _auth.currentUser;
+    if (user != null) {
+      setState(() {
+        _isAdmin = user.email == adminEmail;
+      });
     }
   }
 
@@ -44,15 +40,15 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       length: 5,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.white,
           elevation: 1,
           title: Text(
             'Announcements',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.black),
           ),
           centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () {
               // Navigate to the home page (replace 'HomePage' with your actual home widget)
               Navigator.pushReplacement(
@@ -63,8 +59,8 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
           ),
           bottom: TabBar(
             isScrollable: true,
-            indicatorColor: Colors.black,
-            labelColor: Colors.white,
+            indicatorColor: Colors.blue,
+            labelColor: Colors.black,
             unselectedLabelColor: Colors.grey,
             tabs: [
               Tab(text: 'All Items'),
@@ -119,8 +115,27 @@ class AnnouncementsList extends StatelessWidget {
 
   const AnnouncementsList({Key? key, required this.category}) : super(key: key);
 
+  Future<void> _deleteAnnouncement(BuildContext context, String docId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('announcements')
+          .doc(docId)
+          .delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Announcement deleted successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting announcement: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
+    final isAdmin = _auth.currentUser?.email == "22-06230@g.batstate-u.edu.ph";
+
     // Query for 'All Items'
     Query query;
     if (category == 'All Items') {
@@ -155,6 +170,7 @@ class AnnouncementsList extends StatelessWidget {
           itemCount: announcements.length,
           itemBuilder: (context, index) {
             final announcement = announcements[index];
+            final docId = announcement.id;
             final title = announcement['title'];
             final description = announcement['description'];
             final category = announcement['category'];
@@ -166,75 +182,118 @@ class AnnouncementsList extends StatelessWidget {
             return Card(
               margin: EdgeInsets.only(bottom: 16, left: 12, right: 12),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12), // Rounded corners
+                borderRadius: BorderRadius.circular(12),
               ),
-              elevation: 4, // Shadow for the card
+              elevation: 4,
               child: Stack(
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    // Padding inside the card
-                    child: ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        title,
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 8),
-                          Text(
-                            description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          SizedBox(height: 8),
-                          Text(formattedDate),
-                        ],
-                      ),
-                      onTap: () {
-                        // Show full announcement when tapped
-                        showDialog(
-                          context: context,
-                          builder: (context) =>
-                              AlertDialog(
-                                title: Text(title),
-                                content: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Category: $category'),
-                                    SizedBox(height: 8),
-                                    Text('Description: $description'),
-                                    SizedBox(height: 8),
-                                    Text('Date: $formattedDate'),
-                                  ],
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text('Close'),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            if (isAdmin)
+                              PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_vert),
+                                onSelected: (value) async {
+                                  if (value == 'edit') {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AddAnnouncementPage(
+                                          isEditing: true,
+                                          announcementId: docId,
+                                          initialTitle: title,
+                                          initialDescription: description,
+                                          initialCategory: category,
+                                        ),
+                                      ),
+                                    );
+                                  } else if (value == 'delete') {
+                                    final shouldDelete = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text('Delete Announcement'),
+                                        content: Text('Are you sure you want to delete this announcement?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, false),
+                                            child: Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, true),
+                                            child: Text(
+                                              'Delete',
+                                              style: TextStyle(color: Colors.red),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ) ?? false;
+
+                                    if (shouldDelete) {
+                                      await _deleteAnnouncement(context, docId);
+                                    }
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) => [
+                                  PopupMenuItem<String>(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit, size: 20),
+                                        SizedBox(width: 8),
+                                        Text('Edit'),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem<String>(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete, size: 20, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Delete', style: TextStyle(color: Colors.red)),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
-                        );
-                      },
-                    ),
-                  ),
-                  // Positioned widget to place the tag at the top right
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Chip(
-                      label: Text(category),
-                      backgroundColor: categoryColor,
-                      // Set the background color of the chip
-                      labelStyle: TextStyle(color: Colors.white),
-                      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                            16), // Rounded pill shape
-                      ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(formattedDate),
+                            Chip(
+                              label: Text(category),
+                              backgroundColor: categoryColor,
+                              labelStyle: TextStyle(color: Colors.white),
+                              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -248,27 +307,40 @@ class AnnouncementsList extends StatelessWidget {
 }
 
 
-// Get tag-specific color
-Color getTagColor(String? tag) {
-  switch (tag) {
-    case 'Exams':
-      return Colors.blue;
-    case 'General':
-      return Colors.red;
-    case 'Sports':
-      return Colors.indigo;
-    case 'Classes':
-      return Colors.orange;
-    case 'Events':
-      return Colors.green;
-    default:
-      return Colors.grey;
+  // Get tag-specific color
+  Color getTagColor(String? tag) {
+    switch (tag) {
+      case 'Exams':
+        return Colors.blue;
+      case 'General':
+        return Colors.red;
+      case 'Sports':
+        return Colors.indigo;
+      case 'Classes':
+        return Colors.orange;
+      case 'Events':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
   }
-}
 
 // Placeholder for Add Announcement Page
 class AddAnnouncementPage extends StatefulWidget {
-  const AddAnnouncementPage({super.key});
+  final bool isEditing;
+  final String? announcementId;
+  final String? initialTitle;
+  final String? initialDescription;
+  final String? initialCategory;
+
+  const AddAnnouncementPage({
+    super.key,
+    this.isEditing = false,
+    this.announcementId,
+    this.initialTitle,
+    this.initialDescription,
+    this.initialCategory,
+  });
 
   @override
   State<AddAnnouncementPage> createState() => _AddAnnouncementPageState();
@@ -276,8 +348,8 @@ class AddAnnouncementPage extends StatefulWidget {
 
 class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
   String? _selectedCategory; // Variable to hold the selected category
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -285,45 +357,65 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
   // List of categories for the dropdown
   final List<String> _categories = ['General', 'Sports', 'Classes', 'Events'];
 
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.initialTitle ?? '');
+    _descriptionController = TextEditingController(text: widget.initialDescription ?? '');
+    _selectedCategory = widget.initialCategory;
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
   Future<void> _submitAnnouncement() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Add the announcement to Firestore
-        await _firestore.collection('announcements').add({
+        final data = {
           'title': _titleController.text,
           'description': _descriptionController.text,
           'category': _selectedCategory,
-          'date_time': Timestamp.now(), // Store current date and time
-        });
+        };
 
-        // Show success message and navigate back
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Announcement added successfully!'),
-        ));
+        if (widget.isEditing && widget.announcementId != null) {
+          // Update existing announcement without modifying the timestamp
+          await _firestore
+              .collection('announcements')
+              .doc(widget.announcementId)
+              .update(data);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Announcement updated successfully!')),
+          );
+        } else {
+          // Add new announcement with current timestamp
+          await _firestore.collection('announcements').add({
+            ...data,
+            'date_time': Timestamp.now(), // Add timestamp only for new announcements
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Announcement added successfully!')),
+          );
+        }
 
-        // Clear the form fields
-        _titleController.clear();
-        _descriptionController.clear();
-        setState(() {
-          _selectedCategory = null; // Reset selected category
-        });
-
-        // Navigate back to the previous screen
         Navigator.pop(context);
       } catch (e) {
-        // Show error message if there's an issue adding the announcement
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error adding announcement: $e'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error ${widget.isEditing ? 'updating' : 'adding'} announcement: $e')),
+        );
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Announcement'),
+        title: Text(widget.isEditing ? 'Edit Announcement' : 'Add Announcement'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -355,7 +447,6 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
                 },
               ),
               SizedBox(height: 16),
-              // Dropdown for category selection
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
                 decoration: InputDecoration(labelText: 'Category'),
@@ -380,7 +471,7 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
               SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _submitAnnouncement,
-                child: Text('Submit'),
+                child: Text(widget.isEditing ? 'Update' : 'Submit'),
               ),
             ],
           ),
