@@ -44,8 +44,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
           'Feedback System',
           style: TextStyle(color: Colors.white),
         ),
+
         backgroundColor: Colors.red,
         iconTheme: IconThemeData(color: Colors.white),
+
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: getFeedbacks(),

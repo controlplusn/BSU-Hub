@@ -110,14 +110,7 @@ class _UserEventsPage extends State<UserEventsPage> {
           style: TextStyle(color: Colors.white),
         ),
         actions: [
-          // Search Icon
-          IconButton(
-            icon: Icon(
-              _isSearchVisible ? Icons.close : Icons.search,
-              color: Colors.white,
-            ),
-            onPressed: _toggleSearchBar, // Toggle the search bar visibility
-          ),
+
           // Notification Icon
           IconButton(
             icon: Icon(
@@ -127,97 +120,21 @@ class _UserEventsPage extends State<UserEventsPage> {
             onPressed: _toggleNotification, // Toggle the notification state on tap
           ),
         ],
-        iconTheme: IconThemeData(color: Colors.white), // Set the color of the hamburger icon
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.red,
-              ),
-              child: _userInfo(widget.user),
-            ),
-            ListTile(
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserDashboardPage(title: "Dashboard", user: widget.user),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              title: const Text('Announcement'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AnnouncementsPage(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              title: const Text('Feedback'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FeedbackPage(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              title: const Text('Events'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserEventsPage(title: "Events", user: widget.user,),
-                  ),
-                );
-              },
-            ),
-            const Divider(),
-            ListTile(
-              title: const Text('Sign Out'),
-              onTap: _signOutAndShowAlert, // Sign out logic here
-            ),
-          ],
-        ),
-      ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            // Navigate to the home page (replace 'HomePage' with your actual home widget)
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()), // Replace with actual home page
+            );
+          },
+        ),      ),
+
 
       body: Column(
         children: [
-          // Show search bar if it's visible
-          if (_isSearchVisible)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Search...',
-                  fillColor: Colors.white,
-                  filled: true,
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.clear),
-                    onPressed: () {
-                      _searchController.clear();
-                    },
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ),
+
           // Scrollable Container
           Expanded(
             child: StreamBuilder(
@@ -397,15 +314,26 @@ class EventDescriptionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Event Details',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.red,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 250.0, // Adjust the height as needed
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Image.asset(
-                'assets/8.jpg',
-                fit: BoxFit.cover,
+          SliverToBoxAdapter(
+            child: Container(
+              height: 200,
+              color: Colors.red.withOpacity(0.1),
+              child: Center(
+                child: Icon(
+                  Icons.event,
+                  size: 80,
+                  color: Colors.red,
+                ),
               ),
             ),
           ),
@@ -419,22 +347,100 @@ class EventDescriptionPage extends StatelessWidget {
                     children: [
                       Text(
                         event.title,
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.calendar_today, size: 16, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text(
+                              DateFormat('EEEE, MMMM d, yyyy').format(event.eventDate),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.access_time, size: 16, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text(
+                              DateFormat('h:mm a').format(event.eventDate),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      Text(
+                        'Description',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       SizedBox(height: 8),
                       Text(
-                        DateFormat('MMM dd, yyyy').format(event.eventDate),
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                      SizedBox(height: 16),
-                      Text(
                         event.description,
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(
+                          fontSize: 16,
+                          height: 1.5,
+                        ),
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: 24),
                       Text(
-                        'Location: ${event.place}',
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                        'Location',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.location_on, color: Colors.red),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                event.place,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -444,7 +450,6 @@ class EventDescriptionPage extends StatelessWidget {
           ),
         ],
       ),
-      // FloatingActionButton to Buy Ticket
     );
   }
 }

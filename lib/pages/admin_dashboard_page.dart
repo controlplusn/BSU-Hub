@@ -193,7 +193,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
               // Active Announcements Container
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: Colors.white70,
                   borderRadius: BorderRadius.circular(8),
@@ -245,7 +245,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         List<Map<String, dynamic>> announcements = snapshot.data!;
 
                         return SizedBox(
-                          height: 200, // Adjust the height to fit the design
+                          height: 200,
+                          // Adjust the height to fit the design
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             itemCount: announcements.length,
@@ -264,8 +265,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               return Card(
                                 margin: const EdgeInsets.symmetric(horizontal: 8.0),
                                 child: Container(
-                                  width: 300,
+                                  width: 270,
                                   padding: const EdgeInsets.all(16.0),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      color: Colors.black, // Border color for the top side
+                                      width: 1.0,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10), // Rounded corners
+                                  ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [

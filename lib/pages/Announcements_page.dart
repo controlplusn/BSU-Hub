@@ -40,17 +40,16 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       length: 5,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.red,
           elevation: 1,
           title: Text(
             'Announcements',
-            style: TextStyle(color: Colors.black),
+            style: TextStyle(color: Colors.white),
           ),
           centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.black),
+            icon: Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () {
-              // Navigate to the home page (replace 'HomePage' with your actual home widget)
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => HomePage()), // Replace with actual home page
@@ -59,9 +58,9 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
           ),
           bottom: TabBar(
             isScrollable: true,
-            indicatorColor: Colors.blue,
-            labelColor: Colors.black,
-            unselectedLabelColor: Colors.grey,
+            indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.grey.shade200,
             tabs: [
               Tab(text: 'All Items'),
               Tab(text: 'General'),
@@ -70,38 +69,34 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
               Tab(text: 'Events'),
             ],
           ),
-          actions: [
-            // Conditionally render the "Add Announcement" button for admins
+        ),
+        body: Stack(
+          children: [
+            TabBarView(
+              children: [
+                AnnouncementsList(category: 'All Items'),
+                AnnouncementsList(category: 'General'),
+                AnnouncementsList(category: 'Sports'),
+                AnnouncementsList(category: 'Classes'),
+                AnnouncementsList(category: 'Events'),
+              ],
+            ),
+            // Add FloatingActionButton for admins only
             if (_isAdmin)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: ElevatedButton.icon(
+              Positioned(
+                bottom: 16,
+                right: 16,
+                child: FloatingActionButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => AddAnnouncementPage()),
                     );
                   },
-                  icon: Icon(Icons.add),
-                  label: Text("Add Announcement"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
+                  child: Icon(Icons.add, color: Colors.white),
+                  backgroundColor: Colors.red,
                 ),
               ),
-          ],
-        ),
-        body: TabBarView(
-          children: [
-            AnnouncementsList(category: 'All Items'),
-            AnnouncementsList(category: 'General'),
-            AnnouncementsList(category: 'Sports'),
-            AnnouncementsList(category: 'Classes'),
-            AnnouncementsList(category: 'Events'),
           ],
         ),
       ),
@@ -302,8 +297,10 @@ class AnnouncementsList extends StatelessWidget {
           },
         );
       },
+
     );
   }
+
 }
 
 
@@ -415,6 +412,8 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.red,
+        foregroundColor: Colors.white,
         title: Text(widget.isEditing ? 'Edit Announcement' : 'Add Announcement'),
       ),
       body: Padding(
@@ -471,6 +470,10 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
               SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _submitAnnouncement,
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white, backgroundColor: Colors.red, // Set the text color to white
+                ),
+
                 child: Text(widget.isEditing ? 'Update' : 'Submit'),
               ),
             ],

@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_up/pages/admin_dashboard_page.dart';
 import 'package:intl/intl.dart'; // Import for formatting the date
-import '../models/events.dart';
 import 'descriptionevent.dart';
 
 class AdminEventsPage extends StatefulWidget {
@@ -18,8 +17,7 @@ class _AdminEventsState extends State<AdminEventsPage> {
   bool _isNotificationActive = false;
   TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
-
-  List<Event> _events = [];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Map<String, String> countdownMap = {};
 
@@ -86,28 +84,34 @@ class _AdminEventsState extends State<AdminEventsPage> {
   }
 
   // fetch events from firestore
-  Stream<List<Event>> _fetchEvents() {
-    return FirebaseFirestore.instance
+  Stream<List<Map<String, dynamic>>> _fetchEvents() {
+    return _firestore
         .collection('events')
+        .orderBy('date_time', descending: false)
+        .limit(10)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) {
-      final data = doc.data();
-      return Event.fromJson(data);
-    }).toList());
+        .map((snapshot) {
+      try {
+        return snapshot.docs.map((doc) {
+          final data = doc.data();
+          return {
+            ...data,
+            'id': doc.id,
+          };
+        }).toList();
+      } catch (e) {
+        print('Error processing events: $e');
+        return [];
+      }
+    });
   }
+
 
   @override
   void initState() {
     super.initState();
-    _loadEvents();
   }
 
-  void _loadEvents() async {
-    final snapshot = await FirebaseFirestore.instance.collection('events').get();
-    setState(() {
-      _events = snapshot.docs.map((doc) => Event.fromJson(doc.data() as Map<String, dynamic>)).toList();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,53 +140,7 @@ class _AdminEventsState extends State<AdminEventsPage> {
         ],
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.red,
-              ),
-              child: Center(child: _userInfo()),
-            ),
-            ListTile(
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AdminDashboardPage(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              title: const Text('Announcement'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Feedback'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Events'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              title: const Text('Sign Out'),
-              onTap: _signOutAndShowAlert,
-            ),
-          ],
-        ),
-      ),
+
       body: Column(
         children: [
           // search bar
@@ -220,24 +178,41 @@ class _AdminEventsState extends State<AdminEventsPage> {
 
           // Event List
           Expanded(
-            child: StreamBuilder<List<Event>>(
+            child: StreamBuilder<List<Map<String, dynamic>>>(
               stream: _fetchEvents(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 }
+
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
 
                 final events = snapshot.data ?? [];
+                // Apply search query filter
                 final filteredEvents = events.where((event) {
-                  return event.title.toLowerCase().contains(_searchQuery) ||
-                      event.description.toLowerCase().contains(_searchQuery);
+                  return event['title'].toLowerCase().contains(_searchQuery) ||
+                      event['description'].toLowerCase().contains(_searchQuery);
                 }).toList();
 
                 if (filteredEvents.isEmpty) {
-                  return Center(child: Text('No events found.'));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.event_busy, size: 48, color: Colors.grey),
+                        SizedBox(height: 8),
+                        Text(
+                          'No upcoming events',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 }
 
                 return ListView.builder(
@@ -245,11 +220,111 @@ class _AdminEventsState extends State<AdminEventsPage> {
                   itemCount: filteredEvents.length,
                   itemBuilder: (context, index) {
                     final event = filteredEvents[index];
-                    return _buildEventCard(context, event);
+                    DateTime eventDate = (event['date_time'] as Timestamp).toDate();  // Convert Timestamp to DateTime
+
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EventDescriptionPage(event: event), // Pass Event object
+                          ),
+                        );
+                      },
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(vertical: 10),
+                        elevation: 3,
+                        child: Stack(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    event['title'] ?? 'No Title',
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    DateFormat('yyyy-MM-dd HH:mm').format(eventDate), // Use the converted DateTime
+                                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    event['description'] ?? 'No Description',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Location: ${event['place'] ?? 'Unknown'}',
+                                    style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_horiz),
+                                onSelected: (value) async {
+                                  if (value == 'Delete') {
+                                    final shouldDelete = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text('Delete Event'),
+                                        content: Text('Are you sure you want to delete this event?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, false),
+                                            child: Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, true),
+                                            child: Text('Delete'),
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: Colors.red,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ) ?? false;
+
+                                    if (shouldDelete) {
+                                      try {
+                                        await FirebaseFirestore.instance
+                                            .collection('events')
+                                            .doc(event['id'])
+                                            .delete();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Event deleted successfully')),
+                                        );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Failed to delete event: $e')),
+                                        );
+                                      }
+                                    }
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) => [
+                                  PopupMenuItem<String>(
+                                    value: 'Delete',
+                                    child: Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   },
                 );
               },
-            ),
+            )
+            ,
           ),
         ],
       ),
@@ -277,50 +352,6 @@ class _AdminEventsState extends State<AdminEventsPage> {
   }
 }
 
-// Widget to display individual event cards
-Widget _buildEventCard(BuildContext context, Event event) {
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EventDescriptionPage(event: event),
-        ),
-      );
-    },
-    child: Card(
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              event.title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              DateFormat('yyyy-MM-dd HH:mm').format(event.eventDate),
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            SizedBox(height: 8),
-            Text(
-              event.description,
-              style: TextStyle(fontSize: 14),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Location: ${event.place}',
-              style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
 
 class AddEventPage extends StatefulWidget {
   @override
