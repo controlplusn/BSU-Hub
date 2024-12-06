@@ -19,6 +19,7 @@ class AdminDashboardPage extends StatefulWidget {
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Define getTagColor here so it can be reused
@@ -45,7 +46,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       QuerySnapshot querySnapshot = await _firestore
           .collection('announcements')
           .orderBy('date_time', descending: true)
-          .limit(5)
           .get();
 
       return querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
@@ -57,12 +57,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   // fetch events
   Stream<List<Map<String, dynamic>>> _fetchUpcomingEvents() {
-    final now = DateTime.now();
     return _firestore
         .collection('events')
-        .orderBy('date_time', descending: false)  // Show earliest events first
-        .where('date_time', isGreaterThanOrEqualTo: Timestamp.fromDate(now))
-        .limit(10)  // Increased limit to show more events
+        .orderBy('date_time', descending: false)
+        .limit(10)
         .snapshots()
         .map((snapshot) {
       try {
