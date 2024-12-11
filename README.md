@@ -70,7 +70,6 @@ A Flutter-based mobile application designed to enhance campus life by centralizi
 
 ## **Screenshots**
 
-_Include screenshots or GIFs of your app to demonstrate key features._
 
 ---
 
