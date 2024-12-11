@@ -69,6 +69,13 @@ A Flutter-based mobile application designed to enhance campus life by centralizi
 ---
 
 ## **Screenshots**
+![462585087_2591264577747893_5781142498694616615_n](https://github.com/user-attachments/assets/36a6acd3-6452-4705-8301-9a0a8ff29d5d)
+![462576196_1093957718880611_6597030350265273796_n](https://github.com/user-attachments/assets/d747d5e6-3b90-45ae-8e11-16d0a1c2e925)
+![462572064_1310409760114677_2345608247056323143_n](https://github.com/user-attachments/assets/832beb8e-1c61-46cb-a73e-1c82907f2dab)
+![467472773_8933882456729778_4353890833375323782_n](https://github.com/user-attachments/assets/3f009f0d-bdba-4754-b25e-c09bc12a78e0)
+![462554304_637202191967457_8434178553435799418_n](https://github.com/user-attachments/assets/4fe8ab57-81a0-426b-93a2-7f40fed13875)
+![462587221_1277852546596331_6885889383286920003_n](https://github.com/user-attachments/assets/663f9818-bd2e-46aa-bc34-985b281bcd19)
+
 
 
 ---
