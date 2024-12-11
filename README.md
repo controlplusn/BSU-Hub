@@ -69,12 +69,21 @@ A Flutter-based mobile application designed to enhance campus life by centralizi
 ---
 
 ## **Screenshots**
-<img src="https://github.com/user-attachments/assets/36a6acd3-6452-4705-8301-9a0a8ff29d5d" alt="Screenshot 1" width="400"/>
-<img src="https://github.com/user-attachments/assets/d747d5e6-3b90-45ae-8e11-16d0a1c2e925" alt="Screenshot 2" width="400"/>
-<img src="https://github.com/user-attachments/assets/832beb8e-1c61-46cb-a73e-1c82907f2dab" alt="Screenshot 3" width="400"/>
-<img src="https://github.com/user-attachments/assets/3f009f0d-bdba-4754-b25e-c09bc12a78e0" alt="Screenshot 4" width="400"/>
-<img src="https://github.com/user-attachments/assets/4fe8ab57-81a0-426b-93a2-7f40fed13875" alt="Screenshot 5" width="400"/>
-<img src="https://github.com/user-attachments/assets/663f9818-bd2e-46aa-bc34-985b281bcd19" alt="Screenshot 6" width="400"/>
+<table>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/36a6acd3-6452-4705-8301-9a0a8ff29d5d" alt="Screenshot 1" width="300"/></td>
+    <td><img src="https://github.com/user-attachments/assets/d747d5e6-3b90-45ae-8e11-16d0a1c2e925" alt="Screenshot 2" width="300"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/832beb8e-1c61-46cb-a73e-1c82907f2dab" alt="Screenshot 3" width="300"/></td>
+    <td><img src="https://github.com/user-attachments/assets/3f009f0d-bdba-4754-b25e-c09bc12a78e0" alt="Screenshot 4" width="300"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/4fe8ab57-81a0-426b-93a2-7f40fed13875" alt="Screenshot 5" width="300"/></td>
+    <td><img src="https://github.com/user-attachments/assets/663f9818-bd2e-46aa-bc34-985b281bcd19" alt="Screenshot 6" width="300"/></td>
+  </tr>
+</table>
+
 
 
 
